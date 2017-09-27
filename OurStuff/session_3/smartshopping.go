@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/datastore"
 )
 
 func main() {
@@ -15,10 +17,72 @@ func main() {
 	http.HandleFunc("/getmarket", getItemsInSupermarket)
 	http.HandleFunc("/totalprice", getItemsTotalPrice)
 
+	http.HandleFunc("/complete", completeHandler)
+	http.HandleFunc("/incomplete", incompleteHandler)
+	http.HandleFunc("/goget", getHandler)
+
+
+	// Connection string: "staging.johaa-178408.appspot.com"
+	//resp, err := http.Get("staging.johaa-178408.appspot.com")
+
+
+
 	err := http.ListenAndServe("localhost:5080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func completeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Some text!")
+
+	// create a new App Engine context from the HTTP request.
+	ctx := appengine.NewContext(r)
+
+	p := &Item{Name: "gopher", SuperMarket: "Netto"}
+
+	// create a new complete key of kind Person and value gopher.
+	key := datastore.NewKey(ctx, "Person", "gopher", 0, nil)
+	// put p in the datastore.
+	key, err := datastore.Put(ctx, key, p)
+	if err != nil {
+		fmt.Fprintf(w, "Error occurred!")
+		//http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "gopher stored with key %v", key)
+}
+
+func incompleteHandler(w http.ResponseWriter, r *http.Request) {
+	// create a new App Engine context from the HTTP request.
+	ctx := appengine.NewContext(r)
+
+	p := &Item{Name: "gopher", SuperMarket: "Netto"}
+
+	// create a new complete key of kind Person.
+	key := datastore.NewIncompleteKey(ctx, "Person", nil)
+	// put p in the datastore.
+	key, err := datastore.Put(ctx, key, p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error!")
+		return
+	}
+	fmt.Fprintf(w, "gopher stored with key %v", key)
+}
+
+func getHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	key := datastore.NewKey(ctx, "Person", "gopher", 0, nil)
+
+	var p Item
+	err := datastore.Get(ctx, key, &p)
+	if err != nil {
+		http.Error(w, "Person not found", http.StatusNotFound)
+		return
+	}
+	fmt.Fprintln(w, p)
 }
 
 var items = []Item{}
