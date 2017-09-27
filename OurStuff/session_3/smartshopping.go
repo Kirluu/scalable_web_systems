@@ -8,18 +8,13 @@ import (
 	"io/ioutil"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/urlfetch"
 )
 
 func main() {
-	http.HandleFunc("/add", addItem)
-	http.HandleFunc("/removeAll", removeAllItems)
-	http.HandleFunc("/removeName", removeItemByName)
-	http.HandleFunc("/getmarket", getItemsInSupermarket)
-	http.HandleFunc("/totalprice", getItemsTotalPrice)
+	appengine.Main()
 
-	http.HandleFunc("/complete", completeHandler)
-	http.HandleFunc("/incomplete", incompleteHandler)
-	http.HandleFunc("/goget", getHandler)
+
 
 
 	// Connection string: "staging.johaa-178408.appspot.com"
@@ -31,6 +26,35 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func init() {
+	http.HandleFunc("/", handler) // Overall default handler
+	http.HandleFunc("/add", addItem)
+	http.HandleFunc("/removeAll", removeAllItems)
+	http.HandleFunc("/removeName", removeItemByName)
+	http.HandleFunc("/getmarket", getItemsInSupermarket)
+	http.HandleFunc("/totalprice", getItemsTotalPrice)
+
+	http.HandleFunc("/complete", completeHandler)
+	http.HandleFunc("/incomplete", incompleteHandler)
+	http.HandleFunc("/goget", getHandler)
+}
+
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	// first create a new context
+	c := appengine.NewContext(r)
+	// and use that context to create a new http client
+	client := urlfetch.Client(c)
+
+	// now we can use that http client as before
+	res, err := client.Get("http://google.com")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not get google: %v", err), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Got Google with status %s\n", res.Status)
 }
 
 func completeHandler(w http.ResponseWriter, r *http.Request) {
