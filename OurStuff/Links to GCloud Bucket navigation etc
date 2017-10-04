@@ -1,0 +1,21 @@
+Create "Service account" + anvendelse i Go af denne, til oprettelse af en Go client som har auth-level = den service-account, man har oprettet:
+https://cloud.google.com/docs/authentication/getting-started
+
+
+"Object" JSON format from GCloud buckets:
+https://cloud.google.com/storage/docs/json_api/v1/objects#resource
+
+
+Fetching list of objects using HTTP (in-browser request-creator):
+https://cloud.google.com/storage/docs/json_api/v1/objects/list
+- Delimiter = "/"
+- prefix = den path, hvorfra du gerne vil se alle contents
+::: Directories lægges i JSON listen "prefixes", objekter i "items"
+
+
+Eksempel på access af data direkte i bucket sub-directory:
+https://console.cloud.google.com/storage/browser/gcp-public-data-sentinel-2/tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE
+
+
+BigQuery web-browser interface:
+https://bigquery.cloud.google.com/table/bigquery-public-data:cloud_storage_geo_index.sentinel_2_index?pli=1

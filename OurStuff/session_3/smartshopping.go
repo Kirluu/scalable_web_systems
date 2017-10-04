@@ -39,7 +39,11 @@ func init() {
 	http.HandleFunc("/complete", completeHandler)
 	http.HandleFunc("/incomplete", incompleteHandler)
 	http.HandleFunc("/goget", getHandler)
+<<<<<<< HEAD
 	http.HandleFunc("/query", queryHandler)
+=======
+	
+>>>>>>> 7d83d2ac66bc1e93c859c64d792860c4fb7696b1
 }
 
 
