@@ -10,6 +10,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
+	"google.golang.org/storage"
 )
 
 func main() {
