@@ -19,3 +19,11 @@ https://console.cloud.google.com/storage/browser/gcp-public-data-sentinel-2/tile
 
 BigQuery web-browser interface:
 https://bigquery.cloud.google.com/table/bigquery-public-data:cloud_storage_geo_index.sentinel_2_index?pli=1
+
+
+BigQuery Client Library usage example frontpage:
+https://cloud.google.com/bigquery/docs/reference/libraries
+
+
+"Automatic" GCloud Client Library Authentication setup:
+https://cloud.google.com/docs/authentication/getting-started
