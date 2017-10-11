@@ -29,3 +29,6 @@ https://cloud.google.com/bigquery/docs/reference/libraries
 
 "Automatic" GCloud Client Library Authentication setup:
 https://cloud.google.com/docs/authentication/getting-started
+
+browser working without oath:
+https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/
