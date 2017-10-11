@@ -1,22 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 
+	"io"
+
 	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/storage"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/cloudkms/v1"
+	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
-	"cloud.google.com/go/storage"
-	"google.golang.org/api/iterator"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/cloudkms/v1"
-	"golang.org/x/net/context"
-	"io"
 )
 
 func adc() {
@@ -77,7 +79,6 @@ func query(proj string, r *http.Request) (*bigquery.RowIterator, error) {
 	//	 LIMIT 1000;`)
 	query := client.Query("SELECT base_url FROM cloud_storage_geo_index.sentinel_2_index where west_lon < 60 and south_lat > 80 LIMIT 1000")
 
-
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
 	query.QueryConfig.UseStandardSQL = true
@@ -110,7 +111,6 @@ func printResults(w io.Writer, iter *bigquery.RowIterator) error {
 	}
 }
 
-
 func main() {
 	//adc()
 	appengine.Main()
@@ -118,10 +118,10 @@ func main() {
 	// Connection string: "staging.johaa-178408.appspot.com"
 	//resp, err := http.Get("staging.johaa-178408.appspot.com")
 	/*
-	err := http.ListenAndServe("localhost:5080", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
+		err := http.ListenAndServe("localhost:5080", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
 	*/
 }
 
@@ -137,15 +137,16 @@ func init() {
 	// http.HandleFunc("/incomplete", incompleteHandler)
 	// http.HandleFunc("/goget", getHandler)
 	http.HandleFunc("/test", testHandler)
-	http.HandleFunc("/images", getImages)
+	//http.HandleFunc("/images", getImages)
 	http.HandleFunc("/bigquery", getBigquery)
+	http.HandleFunc("/test2", testquery)
 
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
 	iter, err := query("bigquery-public-data", r)
 
-	if err != nil && iter != null {
+	if err != nil && iter != nil {
 		fmt.Fprintf(w, "Now going to print results!")
 		printResults(w, iter)
 	}
@@ -181,7 +182,6 @@ func getUnknownURL(lat string, long string) string {
 
 	return "some url"
 }
-
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "MY MESSAGE - PRINT IT NOOOW!")
@@ -326,4 +326,37 @@ func getItemsInSupermarket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Items in %s : %v ", smarket, sum)
+}
+
+func testquery(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	client, err := bigquery.NewClient(ctx, "bigquery-public-data")
+	if err != nil {
+	}
+	q := client.Query("SELECT base_url FROM [cloud_storage_geo_index.sentinel_2_index] where west_lon < 60 and south_lat > 80 LIMIT 1000")
+	q.QueryConfig.UseStandardSQL = true
+	q.DefaultProjectID = "bigquery-public-data"
+	q.DefaultDatasetID = "cloud_storage_geo_index"
+
+	it, err2 := q.Read(ctx)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	printResults(w, it)
+
+}
+
+func httpGet(url string) string {
+	response, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(response.Body)
+	str := buf.String()
+	println(str)
+	return str
 }
