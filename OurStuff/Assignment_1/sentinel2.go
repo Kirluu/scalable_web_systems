@@ -7,22 +7,122 @@ import (
 	"log"
 	"net/http"
 
+	"cloud.google.com/go/bigquery"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
-	"google.golang.org/storage"
+	"cloud.google.com/go/storage"
+	"google.golang.org/api/iterator"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/cloudkms/v1"
+	"golang.org/x/net/context"
+	"io"
 )
 
+func adc() {
+	ctx := context.Background()
+
+	// [START auth_cloud_implicit]
+
+	// For API packages whose import path is starting with "cloud.google.com/go",
+	// such as cloud.google.com/go/storage in this case, if there are no credentials
+	// provided, the client library will look for credentials in the environment.
+	storageClient, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	it := storageClient.Buckets(ctx, "project-id")
+	for {
+		bucketAttrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(bucketAttrs.Name)
+	}
+
+	// For packages whose import path is starting with "google.golang.org/api",
+	// such as google.golang.org/api/cloudkms/v1, use the
+	// golang.org/x/oauth2/google package as shown below.
+	oauthClient, err := google.DefaultClient(ctx, cloudkms.CloudPlatformScope)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	kmsService, err := cloudkms.New(oauthClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// [END auth_cloud_implicit]
+	_ = kmsService
+}
+
+func query(proj string, r *http.Request) (*bigquery.RowIterator, error) {
+	//ctx := context.Background()
+	ctx := appengine.NewContext(r)
+
+	client, err := bigquery.NewClient(ctx, proj)
+	if err != nil {
+		return nil, err
+	}
+	// old prefix : bigquery-public-data: - this is the project iD ?!?!?!?
+	//query := client.Query(
+	//	`SELECT BASE_URL
+	//	 FROM cloud_storage_geo_index.sentinel_2_index
+	//	 WHERE west_lon < 60 and west_lon > 59 and south_lat > 80 and south_lat < 81
+	//	 LIMIT 1000;`)
+	query := client.Query("SELECT base_url FROM cloud_storage_geo_index.sentinel_2_index where west_lon < 60 and south_lat > 80 LIMIT 1000")
+
+
+	// Use standard SQL syntax for queries.
+	// See: https://cloud.google.com/bigquery/sql-reference/
+	query.QueryConfig.UseStandardSQL = true
+	return query.Read(ctx)
+}
+
+// printResults prints results from a query to the Shakespeare dataset.
+func printResults(w io.Writer, iter *bigquery.RowIterator) error {
+	for {
+		var row []bigquery.Value
+		err := iter.Next(&row)
+		if err == iterator.Done {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintln(w, "titles:")
+		ts := row[0].([]bigquery.Value)
+		for _, t := range ts {
+			record := t.([]bigquery.Value)
+			title := record[0].(string)
+			cnt := record[1].(int64)
+			fmt.Fprintf(w, "\t%s: %d\n", title, cnt)
+		}
+
+		words := row[1].(int64)
+		fmt.Fprintf(w, "total unique words: %d\n", words)
+	}
+}
+
+
 func main() {
+	//adc()
 	appengine.Main()
 
 	// Connection string: "staging.johaa-178408.appspot.com"
 	//resp, err := http.Get("staging.johaa-178408.appspot.com")
-
+	/*
 	err := http.ListenAndServe("localhost:5080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+	*/
 }
 
 func init() {
@@ -36,8 +136,20 @@ func init() {
 	// http.HandleFunc("/complete", completeHandler)
 	// http.HandleFunc("/incomplete", incompleteHandler)
 	// http.HandleFunc("/goget", getHandler)
+	http.HandleFunc("/test", testHandler)
 	http.HandleFunc("/images", getImages)
+	http.HandleFunc("/bigquery", getBigquery)
 
+}
+
+func getBigquery(w http.ResponseWriter, r *http.Request) {
+	iter, err := query("bigquery-public-data", r)
+
+	if err != nil && iter != null {
+		fmt.Fprintf(w, "Now going to print results!")
+		printResults(w, iter)
+	}
+	fmt.Fprintf(w, "BigQuery contact failed %s", err)
 }
 
 func getImages(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +167,7 @@ func getImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dec := json.NewDecoder(req.Body)
-	errDec := dec.Decode(&p)
+	errDec := dec.Decode(&req)
 
 	if errDec != nil {
 		http.Error(w, "Failed json decode", http.StatusNotFound)
@@ -68,6 +180,11 @@ func getImages(w http.ResponseWriter, r *http.Request) {
 func getUnknownURL(lat string, long string) string {
 
 	return "some url"
+}
+
+
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "MY MESSAGE - PRINT IT NOOOW!")
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
