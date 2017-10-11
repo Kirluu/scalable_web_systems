@@ -1,11 +1,12 @@
 package main
 
 import (
-	"net/http"
-	"log"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
+
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
@@ -15,13 +16,8 @@ import (
 func main() {
 	appengine.Main()
 
-
-
-
 	// Connection string: "staging.johaa-178408.appspot.com"
 	//resp, err := http.Get("staging.johaa-178408.appspot.com")
-
-
 
 	err := http.ListenAndServe("localhost:5080", nil)
 	if err != nil {
@@ -31,18 +27,48 @@ func main() {
 
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
-	http.HandleFunc("/add", addItem)
-	http.HandleFunc("/removeAll", removeAllItems)
-	http.HandleFunc("/removeName", removeItemByName)
-	http.HandleFunc("/getmarket", getItemsInSupermarket)
-	http.HandleFunc("/totalprice", getItemsTotalPrice)
+	// http.HandleFunc("/add", addItem)
+	// http.HandleFunc("/removeAll", removeAllItems)
+	// http.HandleFunc("/removeName", removeItemByName)
+	// http.HandleFunc("/getmarket", getItemsInSupermarket)
+	// http.HandleFunc("/totalprice", getItemsTotalPrice)
 
-	http.HandleFunc("/complete", completeHandler)
-	http.HandleFunc("/incomplete", incompleteHandler)
-	http.HandleFunc("/goget", getHandler)
-	
+	// http.HandleFunc("/complete", completeHandler)
+	// http.HandleFunc("/incomplete", incompleteHandler)
+	// http.HandleFunc("/goget", getHandler)
+	http.HandleFunc("/images", getImages)
+
 }
 
+func getImages(w http.ResponseWriter, r *http.Request) {
+
+	lat := r.URL.Query().Get("lat")
+	long := r.URL.Query().Get("long")
+
+	newReq := getUnknownURL(lat, long)
+
+	req, err := http.NewRequest("GET", newReq, nil)
+
+	if err != nil {
+		http.Error(w, "Failed ", http.StatusNotFound)
+		return
+	}
+
+	dec := json.NewDecoder(req.Body)
+	errDec := dec.Decode(&p)
+
+	if errDec != nil {
+		http.Error(w, "Failed json decode", http.StatusNotFound)
+		return
+	}
+
+	fmt.Fprintf(w, "lat long %s : %v ", lat, long)
+}
+
+func getUnknownURL(lat string, long string) string {
+
+	return "some url"
+}
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// first create a new context
@@ -114,12 +140,12 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 var items = []Item{}
 
 type Item struct {
-	Name     string `json:"name"`
-	Price int    `json:"price"`
-	SuperMarket string    `json:"superMarket"`
+	Name        string `json:"name"`
+	Price       int    `json:"price"`
+	SuperMarket string `json:"superMarket"`
 }
 
-func addItem(w http.ResponseWriter, r *http.Request){
+func addItem(w http.ResponseWriter, r *http.Request) {
 	var i Item
 
 	dec := json.NewDecoder(r.Body)
@@ -132,7 +158,6 @@ func addItem(w http.ResponseWriter, r *http.Request){
 	items = append(items, i)
 	fmt.Fprintf(w, "Added %v", i.Name)
 }
-
 
 func remove(s []Item, i int) []Item {
 	s[len(s)-1], s[i] = s[i], s[len(s)-1]
@@ -147,22 +172,21 @@ func removeItemByName(w http.ResponseWriter, r *http.Request) {
 	}
 	name := string(b)
 
-
-	for index, e := range items  {
-		if(e.Name == name){
+	for index, e := range items {
+		if e.Name == name {
 			items = remove(items, index)
 		}
 	}
 
 }
 
-func removeAllItems(w http.ResponseWriter, r *http.Request){
+func removeAllItems(w http.ResponseWriter, r *http.Request) {
 	items = []Item{}
 }
 
 func getItemsTotalPrice(w http.ResponseWriter, r *http.Request) {
 	sum := 0
-	for _, e := range items  {
+	for _, e := range items {
 		sum += e.Price
 	}
 
@@ -177,10 +201,9 @@ func getItemsInSupermarket(w http.ResponseWriter, r *http.Request) {
 	}
 	smarket := string(b)
 
-
 	sum := []Item{}
-	for _, e := range items  {
-		if(e.SuperMarket == smarket){
+	for _, e := range items {
+		if e.SuperMarket == smarket {
 			sum = append(sum, e)
 		}
 	}
