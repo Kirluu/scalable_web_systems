@@ -8,8 +8,10 @@ https://cloud.google.com/storage/docs/json_api/v1/objects#resource
 
 Fetching list of objects using HTTP (in-browser request-creator):
 https://cloud.google.com/storage/docs/json_api/v1/objects/list
+- Bucket = bucket-name only, e.g. "gcp-public-data-sentinel-2"
 - Delimiter = "/"
-- prefix = den path, hvorfra du gerne vil se alle contents
+- prefix = den path, hvorfra du gerne vil se alle contents INKL. trailing "/"
+	- FX: "tiles/21/H/UU/S2A_MSIL1C_20170521T134211_N0205_R124_T21HUU_20170521T134911.SAFE/GRANULE/"
 ::: Directories lægges i JSON listen "prefixes", objekter i "items"
 
 
