@@ -330,13 +330,13 @@ func getItemsInSupermarket(w http.ResponseWriter, r *http.Request) {
 
 func testquery(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	client, err := bigquery.NewClient(ctx, "bigquery-public-data")
+	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 	}
-	q := client.Query("SELECT base_url FROM [cloud_storage_geo_index.sentinel_2_index] where west_lon < 60 and south_lat > 80 LIMIT 1000")
+	q := client.Query("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and south_lat > 80 LIMIT 1000")
 	q.QueryConfig.UseStandardSQL = true
-	q.DefaultProjectID = "bigquery-public-data"
-	q.DefaultDatasetID = "cloud_storage_geo_index"
+	//q.DefaultProjectID = "bigquery-public-data"
+	//q.DefaultDatasetID = "cloud_storage_geo_index"
 
 	it, err2 := q.Read(ctx)
 
