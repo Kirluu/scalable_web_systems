@@ -61,14 +61,16 @@ func adc() {
 	_ = kmsService
 }
 
-func query(proj string, r *http.Request) (*bigquery.RowIterator, error) {
+func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIterator, error) {
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
 	client, err := bigquery.NewClient(ctx, proj)
 	if err != nil {
+		fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
 		return nil, err
 	}
+
 	// old prefix : bigquery-public-data: - this is the project iD ?!?!?!?
 	//query := client.Query(
 	//	`SELECT BASE_URL
@@ -110,21 +112,6 @@ func printResults(w io.Writer, iter *bigquery.RowIterator) error {
 	}
 }
 
-
-func main() {
-	//adc()
-	appengine.Main()
-
-	// Connection string: "staging.johaa-178408.appspot.com"
-	//resp, err := http.Get("staging.johaa-178408.appspot.com")
-	/*
-	err := http.ListenAndServe("localhost:5080", nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	*/
-}
-
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
 	// http.HandleFunc("/add", addItem)
@@ -142,10 +129,26 @@ func init() {
 
 }
 
+
+func main() {
+	//adc()
+	appengine.Main()
+
+
+	// Connection string: "staging.johaa-178408.appspot.com"
+	//resp, err := http.Get("staging.johaa-178408.appspot.com")
+	/*
+	err := http.ListenAndServe("localhost:5080", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	*/
+}
+
 func getBigquery(w http.ResponseWriter, r *http.Request) {
 	iter, err := query("bigquery-public-data", r)
 
-	if err != nil && iter != null {
+	if err != nil && iter != nil {
 		fmt.Fprintf(w, "Now going to print results!")
 		printResults(w, iter)
 	}
