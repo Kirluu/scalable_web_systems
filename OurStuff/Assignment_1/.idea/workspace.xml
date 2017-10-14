@@ -14,10 +14,10 @@
       <file leaf-file-name="sentinel2.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sentinel2.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="189" column="34" lean-forward="true" selection-start-line="189" selection-start-column="34" selection-end-line="189" selection-end-column="34" />
+            <state relative-caret-position="200">
+              <caret line="148" column="49" lean-forward="true" selection-start-line="148" selection-start-column="49" selection-end-line="148" selection-end-column="49" />
               <folding>
-                <element signature="e#14#412#0" expanded="true" />
+                <element signature="e#14#427#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -43,6 +43,8 @@
       <find>testq</find>
       <find>testquer</find>
       <find>printresu</find>
+      <find>item</find>
+      <find>for</find>
     </findStrings>
   </component>
   <component name="GOROOT" path="C:\Go" />
@@ -227,7 +229,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -237,7 +239,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -247,7 +249,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -271,7 +273,7 @@
         <state relative-caret-position="238">
           <caret line="14" column="1" lean-forward="false" selection-start-line="14" selection-start-column="1" selection-end-line="14" selection-end-column="1" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -281,7 +283,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -298,7 +300,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -315,7 +317,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -332,7 +334,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -349,7 +351,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -366,7 +368,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -383,7 +385,7 @@
         <state relative-caret-position="1008">
           <caret line="48" column="19" lean-forward="true" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -400,7 +402,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -410,7 +412,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -446,10 +448,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sentinel2.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="189" column="34" lean-forward="true" selection-start-line="189" selection-start-column="34" selection-end-line="189" selection-end-column="34" />
+        <state relative-caret-position="200">
+          <caret line="148" column="49" lean-forward="true" selection-start-line="148" selection-start-column="49" selection-end-line="148" selection-end-column="49" />
           <folding>
-            <element signature="e#14#412#0" expanded="true" />
+            <element signature="e#14#427#0" expanded="true" />
           </folding>
         </state>
       </provider>
