@@ -67,7 +67,7 @@ func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIt
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
-	client, err := bigquery.NewClient(ctx, proj)
+	client, err := bigquery.NewClient(ctx, "kulr-178408")
 	if err != nil {
 		fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
 		return nil, err
@@ -79,7 +79,7 @@ func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIt
 	//	 FROM cloud_storage_geo_index.sentinel_2_index
 	//	 WHERE west_lon < 60 and west_lon > 59 and south_lat > 80 and south_lat < 81
 	//	 LIMIT 1000;`)
-	query := client.Query("SELECT base_url FROM cloud_storage_geo_index.sentinel_2_index where west_lon < 60 and south_lat > 80 LIMIT 1000")
+	query := client.Query("SELECT base_url FROM bigquery-public-data.cloud_storage_geo_index.sentinel_2_index where west_lon < 60 and west_lon > 59.9 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
 
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
@@ -148,7 +148,7 @@ func main() {
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
-	iter, err := query("bigquery-public-data", r)
+	iter, err := query("bigquery-public-data", w, r)
 
 	if err != nil && iter != nil {
 		fmt.Fprintf(w, "Now going to print results!")
