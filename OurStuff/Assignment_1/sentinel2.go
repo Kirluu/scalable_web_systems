@@ -333,7 +333,7 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 	}
-	q := client.Query("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and south_lat > 80 LIMIT 1000")
+	q := client.Query("SELECT * FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
 	q.QueryConfig.UseStandardSQL = true
 	//q.DefaultProjectID = "bigquery-public-data"
 	//q.DefaultDatasetID = "cloud_storage_geo_index"
@@ -344,6 +344,7 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err2)
 	}
 
+	//fmt.Fprintln(w, it)
 	printResults(w, it)
 
 }
