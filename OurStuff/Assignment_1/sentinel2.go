@@ -170,12 +170,13 @@ func apiPrefixesRequest(baseUrl string) ([]string, error) {
 	var requestUrl string = "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o"
 
 	var fullUrl string = requestUrl + "?delimiter=/&prefix=" + baseUrlCorrect
-	// TODO: Build JSON-compliant class to retrieve results through!
+
 	httpGet(fullUrl) // Prints the content string
 
 	var apiRes, apiErr = httpGetApiResult(fullUrl)
 	if (apiErr != nil) {
 		log.Fatal("Failed to get API result.")
+		return []string{}, apiErr
 	}
 
 	return apiRes.Prefixes, nil
@@ -217,15 +218,18 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	printBaseUrls(w, it)
 }
 
-func httpGet(url string) string {
+func httpGet(url string) (string, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
-		return ""
+		return "", err
 	}
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(response.Body)
+	var _, readErr = buf.ReadFrom(response.Body)
+	if (readErr != nil) {
+		return "", readErr
+	}
 	str := buf.String()
 	println(str)
-	return str
+	return str, nil
 }
