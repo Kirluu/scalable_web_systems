@@ -32,3 +32,51 @@ https://cloud.google.com/docs/authentication/getting-started
 
 browser working without oath:
 https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/
+
+
+_____________________________________________________________
+From UTC to MGRS (also knowing lat/long)
+Source-link:
+http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
+
+Specific method with conversion: (uses their MGRS-object-thingy, but maybe we can infer the required meanings)
+/**
+ * Converts UTM coordinate to MGRS reference.
+ *
+ * @returns {Mgrs}
+ * @throws  {Error} Invalid UTM coordinate.
+ *
+ * @example
+ *   var utmCoord = new Utm(31, 'N', 448251, 5411932);
+ *   var mgrsRef = utmCoord.toMgrs(); // 31U DQ 48251 11932
+ */
+Utm.prototype.toMgrs = function() {
+    if (isNaN(this.zone + this.easting + this.northing)) throw new Error('Invalid UTM coordinate ‘'+this.toString()+'’');
+
+    // MGRS zone is same as UTM zone
+    var zone = this.zone;
+
+    // convert UTM to lat/long to get latitude to determine band
+    var latlong = this.toLatLonE();
+    // grid zones are 8° tall, 0°N is 10th band
+    var band = Mgrs.latBands.charAt(Math.floor(latlong.lat/8+10)); // latitude band
+
+    // columns in zone 1 are A-H, zone 2 J-R, zone 3 S-Z, then repeating every 3rd zone
+    var col = Math.floor(this.easting / 100e3);
+    var e100k = Mgrs.e100kLetters[(zone-1)%3].charAt(col-1); // col-1 since 1*100e3 -> A (index 0), 2*100e3 -> B (index 1), etc.
+
+    // rows in even zones are A-V, in odd zones are F-E
+    var row = Math.floor(this.northing / 100e3) % 20;
+    var n100k = Mgrs.n100kLetters[(zone-1)%2].charAt(row);
+
+    // truncate easting/northing to within 100km grid square
+    var easting = this.easting % 100e3;
+    var northing = this.northing % 100e3;
+
+    // round to nm precision
+    easting = Number(easting.toFixed(6));
+    northing = Number(northing.toFixed(6));
+
+    return new Mgrs(zone, band, e100k, n100k, easting, northing);
+};
+_____________________________________________________________
