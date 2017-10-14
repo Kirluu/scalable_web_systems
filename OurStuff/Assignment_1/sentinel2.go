@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -17,8 +16,6 @@ import (
 	"google.golang.org/api/cloudkms/v1"*/
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
-	"google.golang.org/appengine/datastore"
-	"google.golang.org/appengine/urlfetch"
 	"strconv"
 	"strings"
 )
@@ -80,18 +77,7 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 }
 
 func init() {
-	http.HandleFunc("/", handler) // Overall default handler
-	// http.HandleFunc("/add", addItem)
-	// http.HandleFunc("/removeAll", removeAllItems)
-	// http.HandleFunc("/removeName", removeItemByName)
-	// http.HandleFunc("/getmarket", getItemsInSupermarket)
-	// http.HandleFunc("/totalprice", getItemsTotalPrice)
-
-	// http.HandleFunc("/complete", completeHandler)
-	// http.HandleFunc("/incomplete", incompleteHandler)
-	// http.HandleFunc("/goget", getHandler)
-	http.HandleFunc("/test", testHandler)
-	//http.HandleFunc("/images", getImages)
+	http.HandleFunc("/apitest", getApiTestQuery)
 	http.HandleFunc("/bigquery", getBigquery)
 	http.HandleFunc("/test2", testquery)
 
@@ -100,7 +86,6 @@ func init() {
 
 func main() {
 	appengine.Main()
-
 
 	// Connection string: "staging.johaa-178408.appspot.com"
 	//resp, err := http.Get("staging.johaa-178408.appspot.com")
@@ -152,8 +137,20 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 
 	// Now use first (arbitrary) base-URL to do a nice little request
 	var baseUrl = baseUrlIter[0]
+	handleBaseUrl(w, baseUrl)
+
+	fmt.Fprintf(w, "\nReached the end of the handler!")
+}
+
+func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
+	// Test the api access giving a specific base-URL
+	handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
+}
+
+func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
+
 	var prefixes, apiPrefErr = apiPrefixesRequest(baseUrl)
-    if (apiPrefErr != nil) {
+	if (apiPrefErr != nil) {
 		fmt.Fprintf(w, "Failed when getting prefixes: %s", apiPrefErr)
 	}
 	fmt.Fprintf(w, "Succeeded in extracting prefixes:")
@@ -161,7 +158,10 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, prefixes[0]) // TODO: Loop over prefixes and print each, or something like that
 	}
 
-	fmt.Fprintf(w, "\nReached the end of the handler!")
+
+
+	// Full success, return no error:
+	return nil
 }
 
 func apiPrefixesRequest(baseUrl string) ([]string, error) {
