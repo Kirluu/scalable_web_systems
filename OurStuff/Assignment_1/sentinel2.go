@@ -19,6 +19,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/urlfetch"
+	"strconv"
 )
 
 func adc() {
@@ -63,7 +64,7 @@ func adc() {
 	_ = kmsService
 }
 
-func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIterator, error) {
+func query(lat float64, long float64, w http.ResponseWriter, r *http.Request) (*bigquery.RowIterator, error) {
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
@@ -74,14 +75,19 @@ func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIt
 		return nil, err
 	}
 
-	// old prefix : bigquery-public-data: - this is the project iD ?!?!?!?
-	//query := client.Query(
-	//	`SELECT BASE_URL
-	//	 FROM cloud_storage_geo_index.sentinel_2_index
-	//	 WHERE west_lon < 60 and west_lon > 59 and south_lat > 80 and south_lat < 81
-	//	 LIMIT 1000;`)
-	//query := client.Query("SELECT base_url FROM bigquery-public-data.cloud_storage_geo_index.sentinel_2_index where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
-	query := client.Query("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
+	latLess := lat - 0.5
+	latMore := lat + 0.5
+	longLess := long - 0.5
+	longMore := long + 0.5
+
+	// Without params:
+	//queryString := "SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000"
+	// with params:
+	queryString := fmt.Sprintf("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < %g and west_lon > %g and south_lat < %g and south_lat > %g LIMIT 1000", longMore, longLess, latMore, latLess)
+
+	fmt.Fprintf(w, "Your query: \n" + queryString)
+
+	query := client.Query(queryString)
 
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
@@ -89,7 +95,21 @@ func query(proj string, w http.ResponseWriter, r *http.Request) (*bigquery.RowIt
 	return query.Read(ctx)
 }
 
-// printResults prints results from a query to the Shakespeare dataset.
+func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) error {
+	for {
+		var baseUrl string
+		err := iter.Next(&baseUrl)
+		if err == iterator.Done {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(w, baseUrl)
+	}
+}
+
 func printResults(w io.Writer, iter *bigquery.RowIterator) error {
 	for {
 		var row []bigquery.Value
@@ -150,11 +170,27 @@ func main() {
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
-	iter, err := query("bigquery-public-data", w, r)
+	latStr := r.URL.Query().Get("lat")
+	if (latStr == "") { fmt.Fprintf(w, "Missing query input: latitude (lat)")
+		return }
+	lat, latErr := strconv.ParseFloat(latStr, 64)
+	if (latErr != nil) { fmt.Fprintf(w, "Failed to parse latitude!")
+		return }
 
-	if err != nil && iter != nil {
+	longStr := r.URL.Query().Get("long")
+	if (longStr == "") { fmt.Fprintf(w, "Missing query input: longitude (long)")
+		return }
+	long, longErr := strconv.ParseFloat(longStr, 64)
+	if (longErr != nil) { fmt.Fprintf(w, "Failed to parse longitude!")
+		return }
+
+	// Perform query, given the now successfully parsed parameters
+	iter, err := query(lat, long, w, r)
+
+	if err == nil && iter != nil {
 		fmt.Fprintf(w, "Now going to print results!")
-		printResults(w, iter)
+		printBaseUrls(w, iter)
+		return
 	}
 	fmt.Fprintf(w, "BigQuery contact failed %s", err)
 }
@@ -336,8 +372,8 @@ func getItemsInSupermarket(w http.ResponseWriter, r *http.Request) {
 
 func testquery(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	client, err := bigquery.NewClient(ctx, "johaa-178408")
-	//client, err := bigquery.NewClient(ctx, "kulr-178408")
+	//client, err := bigquery.NewClient(ctx, "johaa-178408")
+	client, err := bigquery.NewClient(ctx, "kulr-178408")
 	if err != nil {
 	}
 	q := client.Query("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
