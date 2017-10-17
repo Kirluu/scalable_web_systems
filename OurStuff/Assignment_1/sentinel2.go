@@ -146,7 +146,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 
 	// Now use first (arbitrary) base-URL to do a nice little request
 	var baseUrl = baseUrlIter[0]
-	handleBaseUrl(w, baseUrl)
+	handleBaseUrl(w, r, baseUrl)
 
 	fmt.Fprintf(w, "\nReached the end of the handler!")
 }
@@ -154,7 +154,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
 	// Test the api access giving a specific base-URL
 
-	str, err := httpGet("https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/")
+	str, err := httpGet(w, r, "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/")
 	if (err != nil) {
 		fmt.Fprintf(w, "Error! %s", err)
 	}
@@ -162,9 +162,9 @@ func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
 	//handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
 }
 
-func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
+func handleBaseUrl(w http.ResponseWriter, r *http.Request,  baseUrl string) error {
 
-	var prefixes, apiPrefErr = apiPrefixesRequest(baseUrl)
+	var prefixes, apiPrefErr = apiPrefixesRequest(w, r, baseUrl)
 	if apiPrefErr != nil {
 		fmt.Fprintf(w, "Failed when getting prefixes: %s", apiPrefErr)
 	}
@@ -177,14 +177,14 @@ func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
 	return nil
 }
 
-func apiPrefixesRequest(baseUrl string) ([]string, error) {
+func apiPrefixesRequest(w http.ResponseWriter, r *http.Request, baseUrl string) ([]string, error) {
 	// remove the useless front-part of the given base-URL + add known GRANULE-directory
 	var baseUrlCorrect = strings.TrimPrefix(baseUrl, "gs://gcp-public-data-sentinel-2/") + "/GRANULE/"
 	var requestUrl string = "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o"
 
 	var fullUrl string = requestUrl + "?delimiter=/&prefix=" + baseUrlCorrect
 
-	httpGet(fullUrl) // Prints the content string
+	httpGet(w, r, fullUrl) // Prints the content string
 
 	var apiRes, apiErr = httpGetApiResult(fullUrl)
 	if apiErr != nil {
@@ -235,19 +235,23 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	printBaseUrls(w, it)
 }
 
-func httpGet(url string) (string, error) {
-	response, err := http.Get(url)
+func httpGet(w http.ResponseWriter, r *http.Request, url string) (string, error) {
+	ctx := appengine.NewContext(r)
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return "", err
 	}
 	buf := new(bytes.Buffer)
-	var _, readErr = buf.ReadFrom(response.Body)
+	var _, readErr = buf.ReadFrom(resp.Body)
 	if readErr != nil {
+		log.Fatal(err)
 		return "", readErr
 	}
 	str := buf.String()
-	println(str)
+	fmt.Fprintf(w, "'httpGet' RESPONSE:\n\n%s", str)
+
 	return str, nil
 }
 
@@ -266,13 +270,3 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Got Google with status %s\n", res.Status)
 }
 
-func get(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	client := urlfetch.Client(ctx)
-	resp, err := client.Get("https://www.google.com/")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, "HTTP GET returned status %v", resp.Status)
-}
