@@ -151,6 +151,10 @@ type ApiItem struct {
 	MediaLink string `json:"mediaLink"`
 }
 
+type imageResults struct {
+	links []string `json:"links"`
+}
+
 func handleBaseUrl(w http.ResponseWriter, r *http.Request, baseUrl string) error {
 	//fmt.Fprintf(w, "apiPrefixRequest\n")
 	// remove the useless front-part of the given base-URL + add known GRANULE-directory
@@ -174,13 +178,18 @@ func handleBaseUrl(w http.ResponseWriter, r *http.Request, baseUrl string) error
 		log.Fatal("Failed to get Images.")
 		return apiImgErr
 	}
+	list := []string{}
 
 	if len(apiImages.Items) > 0 {
 		// Iterate returned prefixes
 		for i := 0; i < len(apiImages.Items); i++ {
 			item := apiImages.Items[i]
-			fmt.Fprintf(w, "\n%s\n", item.SelfLink)
+			//fmt.Fprintf(w, "\n%s\n", item.SelfLink)
+			list = append(list, item.SelfLink)
 		}
+		enc := json.NewEncoder(w)
+		enc.Encode(list)
+
 	} else {
 		fmt.Fprintf(w, "No items discovered under IMG_DATA.")
 	}
