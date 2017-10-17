@@ -21,7 +21,6 @@ import (
 
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
-	http.HandleFunc("/apitest", getApiTestQuery)
 	http.HandleFunc("/bigquery", getBigquery)
 
 }
@@ -39,7 +38,6 @@ func main() {
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "getBigQuery:\n")
 	latStr := r.URL.Query().Get("lat")
 	if latStr == "" {
 		fmt.Fprintf(w, "Missing query input: latitude (lat)")
@@ -63,30 +61,25 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Perform query, given the now successfully parsed parameters
-	baseUrlIter, err := getBaseUrls(lat, long, w, r)
-	if err != nil || baseUrlIter == nil {
-		fmt.Fprintf(w, "BigQuery contact failed %s\n", err)
+	baseUrlList, err := getBaseUrls(lat, long, w, r)
+	if err != nil || baseUrlList == nil {
+		fmt.Fprintf(w, "BigQuery contact failed %s", err)
 		return
 	}
-	if len(baseUrlIter) == 0 {
-		fmt.Fprintf(w, "No base-URLs retrieved.")
+	if len(baseUrlList) == 0 {
+		fmt.Fprintf(w, "No base-URLs could be found for the given Long and Lat arguments.")
 		return
 	}
 
 	// Now use first (arbitrary) base-URL to do a nice little request
-	if len(baseUrlIter) == 0 {
-		fmt.Fprintf(w, "No base-URLs could be found for the given Long and Lat arguments.\n")
-		return
-	}
-
-	var baseUrl = baseUrlIter[0]
+	var baseUrl = baseUrlList[0]
 	handleBaseUrl(w, r, baseUrl)
 
-	fmt.Fprintf(w, "\nReached the end of the handler!\n")
+	//fmt.Fprintf(w, "\nReached the end of the handler!")
 }
 
 func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Request) ([]string, error) {
-	fmt.Fprintf(w, "getBaseUrls\n")
+	//fmt.Fprintf(w, "getBaseUrls\n")
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
@@ -107,7 +100,7 @@ func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Reque
 	// with params:
 	queryString := fmt.Sprintf("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < %g and west_lon > %g and south_lat < %g and south_lat > %g LIMIT 1000", longMore, longLess, latMore, latLess)
 
-	fmt.Fprintf(w, "Your query: \n"+queryString+"\n\n")
+	//fmt.Fprintf(w, "Your query: \n"+queryString+"\n\n")
 
 	query := client.Query(queryString)
 
@@ -120,13 +113,13 @@ func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Reque
 		return nil, readErr
 	}
 
-	fmt.Fprintf(w, "\n\n")
+	//fmt.Fprintf(w, "\n\n")
 
 	return printBaseUrls(w, queryIterator)
 }
 
 func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
-	fmt.Fprintf(w, "printBaseUrls\n")
+	//fmt.Fprintf(w, "printBaseUrls\n")
 	var resList []string
 
 	for {
@@ -139,9 +132,9 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 			return nil, err
 		}
 		resList = append(resList, fmt.Sprintf("%s", baseUrl[0]))
-		fmt.Fprintf(w, "\n%s", baseUrl[0])
+		//fmt.Fprintf(w, "\n%s", baseUrl[0])
 	}
-	fmt.Fprintf(w, "\n\n")
+	//fmt.Fprintf(w, "\n\n")
 
 	return resList, nil
 }
@@ -158,53 +151,42 @@ type ApiItem struct {
 	MediaLink string `json:"mediaLink"`
 }
 
-func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
-	// Test the api access giving a specific base-URL
-
-	str, err := httpGet(w, r, "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/")
-	if err != nil {
-		fmt.Fprintf(w, "Error! %s", err)
-	}
-	fmt.Fprintf(w, "CONTENTS:\n\n%s", str)
-	//handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
-}
-
 func handleBaseUrl(w http.ResponseWriter, r *http.Request, baseUrl string) error {
-	fmt.Fprintf(w, "handleBaseUrl\n")
-
-	var prefixes, apiPrefErr = apiPrefixesRequest(w, r, baseUrl)
-	if apiPrefErr != nil {
-		fmt.Fprintf(w, "Failed when getting prefixes: %s\n", apiPrefErr)
-	}
-	fmt.Fprintf(w, "Succeeded in extracting prefixes:\n")
-	if len(prefixes) > 0 {
-		fmt.Fprintf(w, prefixes[0]+"\n") // TODO: Loop over prefixes and print each, or something like that
-	}
-	fmt.Fprintf(w, "\n\n")
-
-	// Full success, return no error:
-	return nil
-}
-
-func apiPrefixesRequest(w http.ResponseWriter, r *http.Request, baseUrl string) ([]string, error) {
-	fmt.Fprintf(w, "apiPrefixRequest\n")
+	//fmt.Fprintf(w, "apiPrefixRequest\n")
 	// remove the useless front-part of the given base-URL + add known GRANULE-directory
 	var baseUrlCorrect = strings.TrimPrefix(baseUrl, "gs://gcp-public-data-sentinel-2/") + "/GRANULE/"
 	var requestUrl string = "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o"
 
 	var fullUrl string = requestUrl + "?delimiter=/&prefix=" + baseUrlCorrect
 
-	httpGet(w, r, fullUrl) // Prints the content string
+	//httpGet(w, r, fullUrl) // Prints the content string
 
 	var apiRes, apiErr = httpGetApiResult(w, r, fullUrl)
 	if apiErr != nil {
 		log.Fatal("Failed to get API result.")
-		return []string{}, apiErr
+		return apiErr
 	}
 
-	fmt.Fprintf(w, "\n\n")
+	var imgURL = fullUrl + strings.TrimPrefix(apiRes.Prefixes[0], baseUrlCorrect) + "IMG_DATA/"
 
-	return apiRes.Prefixes, nil
+	var apiImages, apiImgErr = httpGetApiResult(w, r, imgURL)
+	if apiImgErr != nil {
+		log.Fatal("Failed to get Images.")
+		return apiImgErr
+	}
+
+	if len(apiImages.Items) > 0 {
+		// Iterate returned prefixes
+		for i := 0; i < len(apiImages.Items); i++ {
+			item := apiImages.Items[i]
+			fmt.Fprintf(w, "\n%s\n", item.SelfLink)
+		}
+	} else {
+		fmt.Fprintf(w, "No items discovered under IMG_DATA.")
+	}
+	//fmt.Fprintf(w, "\n\n")
+
+	return nil //no error
 }
 
 func httpGetApiResult(w http.ResponseWriter, r *http.Request, url string) (ApiResult, error) {
@@ -223,7 +205,7 @@ func httpGetApiResult(w http.ResponseWriter, r *http.Request, url string) (ApiRe
 		return ApiResult{}, decErr
 	}
 
-	fmt.Fprintf(w, "ApiResult given Base-URL request:\n%s\n", res)
+	//fmt.Fprintf(w, "ApiResult given Base-URL request:\n%s\n", res)
 
 	return res, nil
 }
@@ -243,7 +225,7 @@ func httpGet(w http.ResponseWriter, r *http.Request, url string) (string, error)
 		return "", readErr
 	}
 	str := buf.String()
-	fmt.Fprintf(w, "'httpGet' RESPONSE:\n\n%s", str)
+	//fmt.Fprintf(w, "'httpGet' RESPONSE:\n\n%s", str)
 
 	return str, nil
 }
