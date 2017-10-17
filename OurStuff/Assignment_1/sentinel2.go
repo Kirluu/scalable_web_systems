@@ -191,7 +191,7 @@ func apiPrefixesRequest(w http.ResponseWriter, r *http.Request, baseUrl string) 
 
 	httpGet(w, r, fullUrl) // Prints the content string
 
-	var apiRes, apiErr = httpGetApiResult(fullUrl)
+	var apiRes, apiErr = httpGetApiResult(w, r, fullUrl)
 	if apiErr != nil {
 		log.Fatal("Failed to get API result.")
 		return []string{}, apiErr
@@ -200,19 +200,24 @@ func apiPrefixesRequest(w http.ResponseWriter, r *http.Request, baseUrl string) 
 	return apiRes.Prefixes, nil
 }
 
-func httpGetApiResult(url string) (ApiResult, error) {
-	response, err := http.Get(url)
+func httpGetApiResult(w http.ResponseWriter, r *http.Request, url string) (ApiResult, error) {
+	ctx := appengine.NewContext(r)
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get(url)
 	if err != nil {
-		log.Fatal(err)
-		return ApiResult{}, nil
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return ApiResult{}, err
 	}
 
 	var res ApiResult
-	dec := json.NewDecoder(response.Body)
+	dec := json.NewDecoder(resp.Body)
 	decErr := dec.Decode(&res)
 	if decErr != nil {
 		return ApiResult{}, decErr
 	}
+
+	fmt.Fprintf(w, "ApiResult given Base-URL request:\n%s\n", res)
+	
 	return res, nil
 }
 
