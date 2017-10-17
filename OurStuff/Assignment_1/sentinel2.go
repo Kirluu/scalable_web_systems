@@ -14,18 +14,20 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudkms/v1"*/
-	"google.golang.org/api/iterator"
-	"google.golang.org/appengine"
 	"strconv"
 	"strings"
+
+	"google.golang.org/api/iterator"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 )
 
 func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Request) ([]string, error) {
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
-	client, err := bigquery.NewClient(ctx, "kulr-178408")
-	//client, err := bigquery.NewClient(ctx, "johaa-178408")
+	//client, err := bigquery.NewClient(ctx, "kulr-178408")
+	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 		fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
 		return nil, err
@@ -41,7 +43,7 @@ func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Reque
 	// with params:
 	queryString := fmt.Sprintf("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < %g and west_lon > %g and south_lat < %g and south_lat > %g LIMIT 1000", longMore, longLess, latMore, latLess)
 
-	fmt.Fprintf(w, "Your query: \n" + queryString)
+	fmt.Fprintf(w, "Your query: \n"+queryString)
 
 	query := client.Query(queryString)
 
@@ -50,7 +52,7 @@ func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Reque
 	query.QueryConfig.UseStandardSQL = true
 
 	var queryIterator, readErr = query.Read(ctx)
-	if (readErr != nil) {
+	if readErr != nil {
 		return nil, readErr
 	}
 
@@ -77,12 +79,12 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 }
 
 func init() {
+	http.HandleFunc("/", handler) // Overall default handler
 	http.HandleFunc("/apitest", getApiTestQuery)
 	http.HandleFunc("/bigquery", getBigquery)
 	http.HandleFunc("/test2", testquery)
 
 }
-
 
 func main() {
 	appengine.Main()
@@ -94,35 +96,42 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}*/
-
 }
 
 type ApiResult struct {
-	Prefixes []string `json:"prefixes"`
-	Items []ApiItem `json:"items"`
+	Prefixes []string  `json:"prefixes"`
+	Items    []ApiItem `json:"items"`
 }
 
 type ApiItem struct {
-	Id string `json:"id"`
-	SelfLink string `json:"selfLink"`
-	Name string `json:"name"`
+	Id        string `json:"id"`
+	SelfLink  string `json:"selfLink"`
+	Name      string `json:"name"`
 	MediaLink string `json:"mediaLink"`
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
 	latStr := r.URL.Query().Get("lat")
-	if (latStr == "") { fmt.Fprintf(w, "Missing query input: latitude (lat)")
-		return }
+	if latStr == "" {
+		fmt.Fprintf(w, "Missing query input: latitude (lat)")
+		return
+	}
 	lat, latErr := strconv.ParseFloat(latStr, 64)
-	if (latErr != nil) { fmt.Fprintf(w, "Failed to parse latitude!")
-		return }
+	if latErr != nil {
+		fmt.Fprintf(w, "Failed to parse latitude!")
+		return
+	}
 
 	longStr := r.URL.Query().Get("long")
-	if (longStr == "") { fmt.Fprintf(w, "Missing query input: longitude (long)")
-		return }
+	if longStr == "" {
+		fmt.Fprintf(w, "Missing query input: longitude (long)")
+		return
+	}
 	long, longErr := strconv.ParseFloat(longStr, 64)
-	if (longErr != nil) { fmt.Fprintf(w, "Failed to parse longitude!")
-		return }
+	if longErr != nil {
+		fmt.Fprintf(w, "Failed to parse longitude!")
+		return
+	}
 
 	// Perform query, given the now successfully parsed parameters
 	baseUrlIter, err := getBaseUrls(lat, long, w, r)
@@ -130,7 +139,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "BigQuery contact failed %s", err)
 		return
 	}
-	if (len(baseUrlIter) == 0) {
+	if len(baseUrlIter) == 0 {
 		fmt.Fprintf(w, "No base-URLs retrieved.")
 		return
 	}
@@ -156,15 +165,13 @@ func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
 func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
 
 	var prefixes, apiPrefErr = apiPrefixesRequest(baseUrl)
-	if (apiPrefErr != nil) {
+	if apiPrefErr != nil {
 		fmt.Fprintf(w, "Failed when getting prefixes: %s", apiPrefErr)
 	}
 	fmt.Fprintf(w, "Succeeded in extracting prefixes:")
 	if len(prefixes) > 0 {
 		fmt.Fprintf(w, prefixes[0]) // TODO: Loop over prefixes and print each, or something like that
 	}
-
-
 
 	// Full success, return no error:
 	return nil
@@ -180,7 +187,7 @@ func apiPrefixesRequest(baseUrl string) ([]string, error) {
 	httpGet(fullUrl) // Prints the content string
 
 	var apiRes, apiErr = httpGetApiResult(fullUrl)
-	if (apiErr != nil) {
+	if apiErr != nil {
 		log.Fatal("Failed to get API result.")
 		return []string{}, apiErr
 	}
@@ -210,6 +217,7 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	client, err := bigquery.NewClient(ctx, "kulr-178408")
 	if err != nil {
 	}
+	//q := client.Query("SELECT * FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
 	q := client.Query("SELECT base_url FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where west_lon < 60 and west_lon > 59.5 and south_lat > 80.9 and south_lat < 81 LIMIT 1000")
 	q.QueryConfig.UseStandardSQL = true
 	//q.DefaultProjectID = "bigquery-public-data"
@@ -220,6 +228,9 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	if err2 != nil {
 		log.Fatal(err2)
 	}
+
+	//fmt.Fprintln(w, it)
+	//printResults(w, it)
 
 	printBaseUrls(w, it)
 }
@@ -232,10 +243,36 @@ func httpGet(url string) (string, error) {
 	}
 	buf := new(bytes.Buffer)
 	var _, readErr = buf.ReadFrom(response.Body)
-	if (readErr != nil) {
+	if readErr != nil {
 		return "", readErr
 	}
 	str := buf.String()
 	println(str)
 	return str, nil
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	// first create a new context
+	c := appengine.NewContext(r)
+	// and use that context to create a new http client
+	client := urlfetch.Client(c)
+
+	// now we can use that http client as before
+	res, err := client.Get("http://google.com")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not get google: %v", err), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Got Google with status %s\n", res.Status)
+}
+
+func get(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get("https://www.google.com/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "HTTP GET returned status %v", resp.Status)
 }
