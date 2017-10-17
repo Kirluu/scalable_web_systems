@@ -89,12 +89,12 @@ func main() {
 
 	// Connection string: "staging.johaa-178408.appspot.com"
 	//resp, err := http.Get("staging.johaa-178408.appspot.com")
-	/*
-	err := http.ListenAndServe("localhost:5080", nil)
+
+	/*err := http.ListenAndServe("localhost:5080", nil)
 	if err != nil {
 		log.Fatal(err)
-	}
-	*/
+	}*/
+
 }
 
 type ApiResult struct {
@@ -144,7 +144,13 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 
 func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
 	// Test the api access giving a specific base-URL
-	handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
+
+	str, err := httpGet("https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/")
+	if (err != nil) {
+		fmt.Fprintf(w, "Error! %s", err)
+	}
+	fmt.Fprintf(w, "CONTENTS:\n\n%s", str)
+	//handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
 }
 
 func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
