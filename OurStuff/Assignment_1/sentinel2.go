@@ -71,9 +71,10 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		//resList = append(resList, baseUrl)
-		fmt.Fprintf(w, "%s", baseUrl[0])
+		resList = append(resList, fmt.Sprintf("%s", baseUrl[0]))
+		fmt.Fprintf(w, "\n%s", baseUrl[0])
 	}
+	fmt.Fprintf(w, "\n")
 
 	return resList, nil
 }
@@ -145,6 +146,10 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Now use first (arbitrary) base-URL to do a nice little request
+	if len(baseUrlIter) == 0 {
+		fmt.Fprintf(w, "No base-URLs could be found for the given Long and Lat arguments.")
+		return
+	}
 	var baseUrl = baseUrlIter[0]
 	handleBaseUrl(w, r, baseUrl)
 
