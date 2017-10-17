@@ -63,7 +63,7 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 	var resList []string
 
 	for {
-		var baseUrl string
+		var baseUrl []bigquery.Value
 		err := iter.Next(&baseUrl)
 		if err == iterator.Done {
 			return resList, err
@@ -71,8 +71,8 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		resList = append(resList, baseUrl)
-		fmt.Fprintf(w, baseUrl)
+		//resList = append(resList, baseUrl)
+		fmt.Fprintf(w, "%s", baseUrl[0])
 	}
 
 	return resList, nil
