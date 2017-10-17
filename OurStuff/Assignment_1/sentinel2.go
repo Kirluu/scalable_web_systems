@@ -135,22 +135,18 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Perform query, given the now successfully parsed parameters
-	baseUrlIter, err := getBaseUrls(lat, long, w, r)
-	if err != nil || baseUrlIter == nil {
+	baseUrlList, err := getBaseUrls(lat, long, w, r)
+	if err != nil || baseUrlList == nil {
 		fmt.Fprintf(w, "BigQuery contact failed %s", err)
 		return
 	}
-	if len(baseUrlIter) == 0 {
-		fmt.Fprintf(w, "No base-URLs retrieved.")
+	if len(baseUrlList) == 0 {
+		fmt.Fprintf(w, "No base-URLs could be found for the given Long and Lat arguments.")
 		return
 	}
 
 	// Now use first (arbitrary) base-URL to do a nice little request
-	if len(baseUrlIter) == 0 {
-		fmt.Fprintf(w, "No base-URLs could be found for the given Long and Lat arguments.")
-		return
-	}
-	var baseUrl = baseUrlIter[0]
+	var baseUrl = baseUrlList[0]
 	handleBaseUrl(w, r, baseUrl)
 
 	fmt.Fprintf(w, "\nReached the end of the handler!")
@@ -174,9 +170,13 @@ func handleBaseUrl(w http.ResponseWriter, r *http.Request,  baseUrl string) erro
 		fmt.Fprintf(w, "Failed when getting prefixes: %s", apiPrefErr)
 	}
 	fmt.Fprintf(w, "Succeeded in extracting prefixes:")
-	if len(prefixes) > 0 {
-		fmt.Fprintf(w, prefixes[0]) // TODO: Loop over prefixes and print each, or something like that
+
+	for i := 0; i < len(prefixes); i++ {
+		prefix := prefixes[i]
+		fmt.Fprintf(w, "%s\n", prefix)
 	}
+
+	// TODO: Handle each prefix in for-loop above
 
 	// Full success, return no error:
 	return nil
@@ -197,6 +197,25 @@ func apiPrefixesRequest(w http.ResponseWriter, r *http.Request, baseUrl string) 
 		return []string{}, apiErr
 	}
 
+	var imgURL = fullUrl + strings.TrimPrefix(apiRes.Prefixes[0], baseUrlCorrect) + "IMG_DATA/"
+
+	var apiImages, apiImgErr = httpGetApiResult(w, r, imgURL)
+	if apiImgErr != nil {
+		log.Fatal("Failed to get Images.")
+		return []string{}, apiImgErr
+	}
+
+	if len(apiImages.Items) > 0 {
+		// Iterate returned prefixes
+		for i := 0; i < len(apiImages.Items); i++ {
+			item := apiImages.Items[i]
+			fmt.Fprintf(w, "%s\n", item.SelfLink)
+		}
+	} else {
+		fmt.Fprintf(w, "No items discovered under IMG_DATA.")
+	}
+
+	// TODO: What to return, if anything?
 	return apiRes.Prefixes, nil
 }
 
@@ -217,7 +236,7 @@ func httpGetApiResult(w http.ResponseWriter, r *http.Request, url string) (ApiRe
 	}
 
 	fmt.Fprintf(w, "ApiResult given Base-URL request:\n%s\n", res)
-	
+
 	return res, nil
 }
 
