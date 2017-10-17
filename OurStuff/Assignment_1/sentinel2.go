@@ -80,6 +80,7 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
+	http.HandleFunc("/apitest", getApiTestQuery)
 	http.HandleFunc("/bigquery", getBigquery)
 	http.HandleFunc("/test2", testquery)
 
@@ -146,6 +147,18 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 
 	// Now use first (arbitrary) base-URL to do a nice little request
 	var baseUrl = baseUrlIter[0]
+	handleBaseUrl(w, baseUrl)
+
+	fmt.Fprintf(w, "\nReached the end of the handler!")
+}
+
+func getApiTestQuery(w http.ResponseWriter, r *http.Request) {
+	// Test the api access giving a specific base-URL
+	handleBaseUrl(w, "gs://gcp-public-data-sentinel-2/tiles/41/X/MK/S2A_MSIL1C_20170810T110621_N0205_R137_T41XMK_20170810T110621.SAFE")
+}
+
+func handleBaseUrl(w http.ResponseWriter, baseUrl string) error {
+
 	var prefixes, apiPrefErr = apiPrefixesRequest(baseUrl)
 	if apiPrefErr != nil {
 		fmt.Fprintf(w, "Failed when getting prefixes: %s", apiPrefErr)
@@ -155,7 +168,8 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, prefixes[0]) // TODO: Loop over prefixes and print each, or something like that
 	}
 
-	fmt.Fprintf(w, "\nReached the end of the handler!")
+	// Full success, return no error:
+	return nil
 }
 
 func apiPrefixesRequest(baseUrl string) ([]string, error) {
@@ -164,12 +178,13 @@ func apiPrefixesRequest(baseUrl string) ([]string, error) {
 	var requestUrl string = "https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o"
 
 	var fullUrl string = requestUrl + "?delimiter=/&prefix=" + baseUrlCorrect
-	// TODO: Build JSON-compliant class to retrieve results through!
+
 	httpGet(fullUrl) // Prints the content string
 
 	var apiRes, apiErr = httpGetApiResult(fullUrl)
 	if apiErr != nil {
 		log.Fatal("Failed to get API result.")
+		return []string{}, apiErr
 	}
 
 	return apiRes.Prefixes, nil
@@ -215,17 +230,20 @@ func testquery(w http.ResponseWriter, r *http.Request) {
 	printBaseUrls(w, it)
 }
 
-func httpGet(url string) string {
+func httpGet(url string) (string, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
-		return ""
+		return "", err
 	}
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(response.Body)
+	var _, readErr = buf.ReadFrom(response.Body)
+	if readErr != nil {
+		return "", readErr
+	}
 	str := buf.String()
 	println(str)
-	return str
+	return str, nil
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
