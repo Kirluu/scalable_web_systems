@@ -19,14 +19,15 @@ import (
 
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 )
 
 func getBaseUrls(lat float64, long float64, w http.ResponseWriter, r *http.Request) ([]string, error) {
 	//ctx := context.Background()
 	ctx := appengine.NewContext(r)
 
-	client, err := bigquery.NewClient(ctx, "kulr-178408")
-	//client, err := bigquery.NewClient(ctx, "johaa-178408")
+	//client, err := bigquery.NewClient(ctx, "kulr-178408")
+	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 		fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
 		return nil, err
@@ -79,17 +80,6 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
-	// http.HandleFunc("/add", addItem)
-	// http.HandleFunc("/removeAll", removeAllItems)
-	// http.HandleFunc("/removeName", removeItemByName)
-	// http.HandleFunc("/getmarket", getItemsInSupermarket)
-	// http.HandleFunc("/totalprice", getItemsTotalPrice)
-
-	// http.HandleFunc("/complete", completeHandler)
-	// http.HandleFunc("/incomplete", incompleteHandler)
-	// http.HandleFunc("/goget", getHandler)
-	http.HandleFunc("/test", testHandler)
-	//http.HandleFunc("/images", getImages)
 	http.HandleFunc("/bigquery", getBigquery)
 	http.HandleFunc("/test2", testquery)
 
@@ -236,4 +226,30 @@ func httpGet(url string) string {
 	str := buf.String()
 	println(str)
 	return str
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	// first create a new context
+	c := appengine.NewContext(r)
+	// and use that context to create a new http client
+	client := urlfetch.Client(c)
+
+	// now we can use that http client as before
+	res, err := client.Get("http://google.com")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not get google: %v", err), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Got Google with status %s\n", res.Status)
+}
+
+func get(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	client := urlfetch.Client(ctx)
+	resp, err := client.Get("https://www.google.com/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "HTTP GET returned status %v", resp.Status)
 }
