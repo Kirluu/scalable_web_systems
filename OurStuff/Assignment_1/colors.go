@@ -1,0 +1,167 @@
+package main
+
+import (
+	"math"
+	"sort"
+	"fmt"
+	"io"
+	"image"
+	"image/png"
+	"os"
+)
+
+type ImgWithRGB struct {
+	imagePath string
+	rgb RGB
+}
+
+type RGB struct {
+	R int `json:"red"`
+	G int `json:"green"`
+	B int `json:"blue"`
+}
+
+
+
+// ---------------------------------- IMAGE LOADING LOGIC (Based on 'image' library) ----------------------------------
+
+func getAverageRGBValue() {
+
+}
+
+// CALL THIS FOR TESTING DECODING OF JP2 FILES
+func tryOpenJP2FileAndPrintPixels() {
+	// You can register another format here
+	image.RegisterFormat("png", "png", png.Decode, png.DecodeConfig) // Shouldn't really be needed - just an example I think
+
+	file, err := os.Open("./image.png") // TODO: PATH TO JP2 FILE HERE - JARL :)
+
+	if err != nil {
+		fmt.Println("Error: File could not be opened")
+		os.Exit(1)
+	}
+
+	defer file.Close()
+
+	pixels, err := getPixels(file)
+
+	if err != nil {
+		fmt.Println("Error: Image could not be decoded")
+		os.Exit(1)
+	}
+
+	fmt.Println(pixels)
+}
+
+// Inspiration from: https://stackoverflow.com/questions/33186783/get-a-pixel-array-from-from-golang-image-image
+func getPixels(file io.Reader) ([][]Pixel, error) {
+	img, _, err := image.Decode(file)
+
+	if err != nil {
+		return nil, err
+	}
+
+	bounds := img.Bounds()
+	width, height := bounds.Max.X, bounds.Max.Y
+
+	var pixels [][]Pixel
+	for y := 0; y < height; y++ {
+		var row []Pixel
+		for x := 0; x < width; x++ {
+			row = append(row, rgbaToPixel(img.At(x, y).RGBA()))
+		}
+		pixels = append(pixels, row)
+	}
+
+	return pixels, nil
+}
+// img.At(x, y).RGBA() returns four uint32 values; we want a Pixel
+func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) Pixel {
+	return Pixel{int(r / 257), int(g / 257), int(b / 257), int(a / 257)}
+}
+// Pixel struct example
+type Pixel struct {
+	R int
+	G int
+	B int
+	A int
+}
+
+
+
+
+// ---------------------------------- COLOR RANKING LOGIC ----------------------------------
+
+// Performs Euclidean distance between two colors
+func L2 (c1 RGB, c2 RGB) float64 {
+	return math.Sqrt(math.Pow(float64(c2.R - c1.R), 2) + math.Pow(float64(c2.G - c1.G), 2) + math.Pow(float64(c2.B - c1.B), 2))
+}
+
+// Actually modifies the given list to be sorted, but also returns it again.
+func orderByColorBand(r bool, g bool, b bool, lst []ImgWithRGB) []ImgWithRGB {
+	cStr := ""
+	if (r) {
+		cStr = "red"
+		sort.Slice(lst, func(i, j int) bool {
+			return lst[i].rgb.R < lst[j].rgb.R
+		})
+	} else if (g) {
+		cStr = "green"
+		sort.Slice(lst, func(i, j int) bool {
+			return lst[i].rgb.G < lst[j].rgb.G
+		})
+	} else if (b) {
+		cStr = "blue"
+		sort.Slice(lst, func(i, j int) bool {
+			return lst[i].rgb.B < lst[j].rgb.B
+		})
+	}
+
+	// Just printing for testing purposes:
+	fmt.Printf("Printing sorted by the %s color band:\n", cStr)
+	for _, v := range lst {
+		if (r) {
+			fmt.Printf("%+v | ", v.rgb.R)
+		} else if (g) {
+			fmt.Printf("%+v | ", v.rgb.G)
+		} else if (b) {
+			fmt.Printf("%+v | ", v.rgb.B)
+		}
+	}
+	fmt.Println()
+
+	return lst
+}
+
+
+// Actually modifies the given list to be sorted, but also returns it again.
+func orderByColor(c RGB, lst []ImgWithRGB) []ImgWithRGB {
+	sort.Slice(lst, func(i, j int) bool {
+		return L2(lst[i].rgb, c) < L2(lst[j].rgb, c)
+	})
+
+	// Just printing for testing purposes:
+	fmt.Printf("Printing sorted RGB values relative to %+v\n", c)
+	for _, v := range lst {
+		fmt.Printf("%+v | ", v.rgb)
+	}
+	fmt.Println()
+
+	return lst
+}
+
+func orderBy2Colors(c1 RGB, c2 RGB, lst []ImgWithRGB) []ImgWithRGB {
+
+	sort.Slice(lst, func(i, j int) bool {
+		return L2(lst[i].rgb, c1)/L2(lst[i].rgb, c2) < L2(lst[j].rgb, c1)/L2(lst[j].rgb, c2)
+	})
+
+	// Just printing for testing purposes:
+	fmt.Printf("Printing sorted RGB values relative to %+v and %+v (distance from the line between the two)\n", c1, c2)
+	for _, v := range lst {
+		fmt.Printf("%+v | ", v.rgb)
+	}
+	fmt.Println()
+
+	return lst
+}
