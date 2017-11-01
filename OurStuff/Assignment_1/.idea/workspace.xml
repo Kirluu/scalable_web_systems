@@ -14,8 +14,8 @@
       <file leaf-file-name="sentinel2.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sentinel2.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="340">
-              <caret line="187" column="43" lean-forward="true" selection-start-line="187" selection-start-column="43" selection-end-line="187" selection-end-column="43" />
+            <state relative-caret-position="719">
+              <caret line="253" column="61" lean-forward="true" selection-start-line="242" selection-start-column="4" selection-end-line="253" selection-end-column="61" />
               <folding>
                 <element signature="e#14#245#0" expanded="true" />
                 <marker date="1508234836126" expanded="true" signature="5088:5091" ph="{...}" />
@@ -27,10 +27,10 @@
       <file leaf-file-name="colors.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/colors.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+            <state relative-caret-position="374">
+              <caret line="46" column="5" lean-forward="true" selection-start-line="46" selection-start-column="5" selection-end-line="46" selection-end-column="5" />
               <folding>
-                <element signature="e#14#88#0" expanded="true" />
+                <element signature="e#14#193#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -63,6 +63,7 @@
       <find>bigquery</find>
       <find>struct</find>
       <find>for</find>
+      <find>urlfetch.</find>
     </findStrings>
   </component>
   <component name="GOROOT" path="C:\Go" />
@@ -110,6 +111,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -121,7 +123,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -421,8 +422,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sentinel2.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="187" column="43" lean-forward="true" selection-start-line="187" selection-start-column="43" selection-end-line="187" selection-end-column="43" />
+        <state relative-caret-position="719">
+          <caret line="253" column="61" lean-forward="true" selection-start-line="242" selection-start-column="4" selection-end-line="253" selection-end-column="61" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
             <marker date="1508234836126" expanded="true" signature="5088:5091" ph="{...}" />
@@ -432,10 +433,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/colors.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+        <state relative-caret-position="374">
+          <caret line="46" column="5" lean-forward="true" selection-start-line="46" selection-start-column="5" selection-end-line="46" selection-end-column="5" />
           <folding>
-            <element signature="e#14#88#0" expanded="true" />
+            <element signature="e#14#193#0" expanded="true" />
           </folding>
         </state>
       </provider>

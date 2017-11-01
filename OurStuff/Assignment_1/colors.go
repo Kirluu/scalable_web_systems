@@ -9,6 +9,11 @@ import (
 	"image/png"
 	"os"
 	"log"
+	"google.golang.org/appengine/urlfetch"
+	"bytes"
+	"google.golang.org/appengine"
+	"net/http"
+	"io/ioutil"
 )
 
 type ImgWithRGB struct {
@@ -26,6 +31,53 @@ type RGB struct {
 
 // ---------------------------------- IMAGE LOADING LOGIC (Based on 'image' library) ----------------------------------
 
+
+// todo-NOTE: Make sure to manually delete file when done reading it, by using: "defer os.Remove(tmpfile.Name())" for each file you get from this function
+func downloadFileAsTemp(imageUrl string) (*os.File, error) {
+	content := []byte("temporary file's content")
+	tmpfile, err := ioutil.TempFile("", "jp2_IMG_")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//defer os.Remove(tmpfile.Name()) // clean up
+
+	if _, err := tmpfile.Write(content); err != nil {
+		log.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	return downloadFileIntoFilePath(tmpfile.Name(), imageUrl)
+}
+
+// Given a save-file-path and a URL with a resource of the save-file-format, the file on the URL is saved at the filepath.
+// Returns a reference to the os.File saved.
+func downloadFileIntoFilePath(filepath string, imageUrl string) (*os.File, error) {
+	// Create the file
+	out, err := os.Create(filepath) // string with relative or full pathing, name and file-extension
+	if err != nil  {
+		return nil, err
+	}
+	defer out.Close()
+	// first create a new context
+	c := appengine.NewContext(r)
+	// and use that context to create a new http client
+	client := urlfetch.Client(c)
+	// now we can use that http client as before
+	resp, err := client.Get(imageUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	// Write the body to the created file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
 
 
 func getAverageRGBValue(redFile io.Reader, greenFile io.Reader, blueFile io.Reader) RGB {
