@@ -8,6 +8,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"log"
 )
 
 type ImgWithRGB struct {
@@ -25,8 +26,34 @@ type RGB struct {
 
 // ---------------------------------- IMAGE LOADING LOGIC (Based on 'image' library) ----------------------------------
 
-func getAverageRGBValue() {
 
+
+func getAverageRGBValue(redFile io.Reader, greenFile io.Reader, blueFile io.Reader) RGB {
+	return RGB {
+		R: getAverage_R_G_or_B_Value(redFile),
+		G: getAverage_R_G_or_B_Value(greenFile),
+		B: getAverage_R_G_or_B_Value(blueFile),
+	}
+}
+
+// Takes a file-reader and
+func getAverage_R_G_or_B_Value(file io.Reader) int {
+	pixels, err := getPixels(file) // Assumption: This method works
+	if (err != nil) {
+		log.Fatal("%s", err)
+	}
+
+	xDimLength := 0
+	sum := 0
+	for y := 0; y < len(pixels); y++ {
+		xDimLength = len(pixels[y])
+		for x := 0; x < len(pixels[y]); x++ {
+			sum += pixels[y][x]
+		}
+	}
+
+	// Return average (as integer division to get concrete, viable value (floored)
+	return sum / len(pixels) * xDimLength
 }
 
 // CALL THIS FOR TESTING DECODING OF JP2 FILES
@@ -54,7 +81,7 @@ func tryOpenJP2FileAndPrintPixels() {
 }
 
 // Inspiration from: https://stackoverflow.com/questions/33186783/get-a-pixel-array-from-from-golang-image-image
-func getPixels(file io.Reader) ([][]Pixel, error) {
+func getPixels(file io.Reader) ([][]int, error) {
 	img, _, err := image.Decode(file)
 
 	if err != nil {
@@ -64,9 +91,9 @@ func getPixels(file io.Reader) ([][]Pixel, error) {
 	bounds := img.Bounds()
 	width, height := bounds.Max.X, bounds.Max.Y
 
-	var pixels [][]Pixel
+	var pixels [][]int
 	for y := 0; y < height; y++ {
-		var row []Pixel
+		var row []int
 		for x := 0; x < width; x++ {
 			row = append(row, rgbaToPixel(img.At(x, y).RGBA()))
 		}
@@ -76,15 +103,8 @@ func getPixels(file io.Reader) ([][]Pixel, error) {
 	return pixels, nil
 }
 // img.At(x, y).RGBA() returns four uint32 values; we want a Pixel
-func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) Pixel {
-	return Pixel{int(r / 257), int(g / 257), int(b / 257), int(a / 257)}
-}
-// Pixel struct example
-type Pixel struct {
-	R int
-	G int
-	B int
-	A int
+func rgbaToPixel(r uint32, g uint32, b uint32, a uint32) int {
+	return int(r / 257) // todo-NOTE: ASSUMPTION: Red, Green and Blue are the same for the given image's RGB values, so we just read Red.
 }
 
 
