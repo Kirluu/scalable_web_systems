@@ -17,6 +17,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
+	"time"
 )
 
 func init() {
@@ -93,7 +94,14 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Perform query, given the now successfully parsed parameters
+	var startBigQuery = time.Now()
 	baseUrlList, err := getBaseUrls(lat, lat2, long, long2, w, r)
+	var elapsed = time.Since(startBigQuery)
+
+	fmt.Fprintf(w, "Time elapsed, querying to BigQuery: %s", elapsed)
+
+	fmt.Fprintf(w, "Your range-query returned %d base-URLs, that we now have to process :)", len(baseUrlList))
+
 	if err != nil || baseUrlList == nil {
 		fmt.Fprintf(w, "BigQuery contact failed %s", err)
 		return
@@ -103,10 +111,15 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var start = time.Now()
 	// Now handle all the Base-URLs returned by the query to BigQuery:
 	for _, baseUrl := range baseUrlList {
 		handleBaseUrl(w, r, baseUrl)
+		fmt.Fprintf(w, "\n\n") // Separate the different buckets' ~12 "jp2" filepaths
 	}
+	elapsed = time.Since(start)
+
+	fmt.Fprintf(w, "Time elapsed: %s", elapsed)
 
 	//fmt.Fprintf(w, "\nReached the end of the handler!")
 }
@@ -231,8 +244,9 @@ func handleBaseUrl(w http.ResponseWriter, r *http.Request, baseUrl string) error
 			//fmt.Fprintf(w, "\n%s\n", item.SelfLink)
 			list = append(list, item.SelfLink)
 		}
-		enc := json.NewEncoder(w)
-		enc.Encode(list)
+
+		//enc := json.NewEncoder(w)
+		//enc.Encode(list)
 
 	} else {
 		fmt.Fprintf(w, "No items discovered under IMG_DATA.")
