@@ -94,6 +94,9 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 
 	// Perform query, given the now successfully parsed parameters
 	baseUrlList, err := getBaseUrls(lat, lat2, long, long2, w, r)
+
+	fmt.Fprintf(w, "You are lucky enough, to have asked for such a big range, that we found %d base-URLs, that we now have to process, thanks to you! :)", len(baseUrlList))
+
 	if err != nil || baseUrlList == nil {
 		fmt.Fprintf(w, "BigQuery contact failed %s", err)
 		return
@@ -106,6 +109,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	// Now handle all the Base-URLs returned by the query to BigQuery:
 	for _, baseUrl := range baseUrlList {
 		handleBaseUrl(w, r, baseUrl)
+		fmt.Fprintf(w, "\n\n") // Separate the different buckets' ~12 "jp2" filepaths
 	}
 
 	//fmt.Fprintf(w, "\nReached the end of the handler!")

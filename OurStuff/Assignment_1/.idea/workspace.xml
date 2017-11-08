@@ -14,11 +14,11 @@
       <file leaf-file-name="sentinel2.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sentinel2.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="638">
-              <caret line="108" column="5" lean-forward="true" selection-start-line="108" selection-start-column="5" selection-end-line="108" selection-end-column="5" />
+            <state relative-caret-position="289">
+              <caret line="110" column="36" lean-forward="true" selection-start-line="110" selection-start-column="36" selection-end-line="110" selection-end-column="36" />
               <folding>
                 <element signature="e#14#245#0" expanded="true" />
-                <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+                <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -248,18 +248,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/sentinel2.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -284,7 +273,7 @@
           <caret line="14" column="1" lean-forward="false" selection-start-line="14" selection-start-column="1" selection-end-line="14" selection-end-column="1" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -295,19 +284,7 @@
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bigquery_test_sql.go" />
-    <entry file="file://$PROJECT_DIR$/sentinel2.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1008">
-          <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
-          <folding>
-            <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -319,7 +296,7 @@
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -331,7 +308,7 @@
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -343,7 +320,7 @@
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -355,7 +332,19 @@
           <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bigquery_test_sql.go" />
+    <entry file="file://$PROJECT_DIR$/sentinel2.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1008">
+          <caret line="48" column="19" lean-forward="false" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
+          <folding>
+            <element signature="e#14#245#0" expanded="true" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -367,7 +356,7 @@
           <caret line="48" column="19" lean-forward="true" selection-start-line="48" selection-start-column="19" selection-end-line="48" selection-end-column="19" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -379,7 +368,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -390,7 +379,7 @@
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -426,13 +415,21 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://C:/Go/src/encoding/json/stream.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="187" column="20" lean-forward="false" selection-start-line="187" selection-start-column="20" selection-end-line="187" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sentinel2.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="638">
-          <caret line="108" column="5" lean-forward="true" selection-start-line="108" selection-start-column="5" selection-end-line="108" selection-end-column="5" />
+        <state relative-caret-position="289">
+          <caret line="110" column="36" lean-forward="true" selection-start-line="110" selection-start-column="36" selection-end-line="110" selection-end-column="36" />
           <folding>
             <element signature="e#14#245#0" expanded="true" />
-            <marker date="1510136032750" expanded="true" signature="6741:6744" ph="{...}" />
+            <marker date="1510136627118" expanded="true" signature="6993:6996" ph="{...}" />
           </folding>
         </state>
       </provider>
