@@ -72,7 +72,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Now use first (arbitrary) base-URL to do a nice little request
-	var baseUrl = baseUrlList[0]
+	var baseUrl = baseUrlList[0] // TODO: Here, potentially "handle" all base URLs if given range of lat/long
 	handleBaseUrl(w, r, baseUrl)
 
 	//fmt.Fprintf(w, "\nReached the end of the handler!")
@@ -131,7 +131,7 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		resList = append(resList, fmt.Sprintf("%s", baseUrl[0]))
+		resList = append(resList, fmt.Sprintf("%s", baseUrl[0])) // TODO: Maybe for range, we need to access all here?
 		//fmt.Fprintf(w, "\n%s", baseUrl[0])
 	}
 	//fmt.Fprintf(w, "\n\n")
