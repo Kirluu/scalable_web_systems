@@ -10,7 +10,6 @@ import (
 	"os"
 	"log"
 	"google.golang.org/appengine/urlfetch"
-	"bytes"
 	"google.golang.org/appengine"
 	"net/http"
 	"io/ioutil"
@@ -33,7 +32,7 @@ type RGB struct {
 
 
 // todo-NOTE: Make sure to manually delete file when done reading it, by using: "defer os.Remove(tmpfile.Name())" for each file you get from this function
-func downloadFileAsTemp(imageUrl string) (*os.File, error) {
+func downloadFileAsTemp(imageUrl string, r *http.Request) (*os.File, error) {
 	content := []byte("temporary file's content")
 	tmpfile, err := ioutil.TempFile("", "jp2_IMG_")
 	if err != nil {
@@ -49,12 +48,12 @@ func downloadFileAsTemp(imageUrl string) (*os.File, error) {
 		log.Fatal(err)
 	}
 
-	return downloadFileIntoFilePath(tmpfile.Name(), imageUrl)
+	return downloadFileIntoFilePath(tmpfile.Name(), imageUrl, r)
 }
 
 // Given a save-file-path and a URL with a resource of the save-file-format, the file on the URL is saved at the filepath.
 // Returns a reference to the os.File saved.
-func downloadFileIntoFilePath(filepath string, imageUrl string) (*os.File, error) {
+func downloadFileIntoFilePath(filepath string, imageUrl string, r *http.Request) (*os.File, error) {
 	// Create the file
 	out, err := os.Create(filepath) // string with relative or full pathing, name and file-extension
 	if err != nil  {
