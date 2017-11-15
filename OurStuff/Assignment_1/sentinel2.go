@@ -98,9 +98,9 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	baseUrlList, err := getBaseUrls(lat, lat2, long, long2, w, r)
 	var elapsed = time.Since(startBigQuery)
 
-	fmt.Fprintf(w, "Time elapsed, querying to BigQuery: %s", elapsed)
+	fmt.Fprintf(w, "Time elapsed, querying to BigQuery: %s\n", elapsed)
 
-	fmt.Fprintf(w, "Your range-query returned %d base-URLs, that we now have to process :)", len(baseUrlList))
+	fmt.Fprintf(w, "Your range-query returned %d base-URLs, that we now have to process :)\n", len(baseUrlList))
 
 	if err != nil || baseUrlList == nil {
 		fmt.Fprintf(w, "BigQuery contact failed %s", err)
@@ -115,11 +115,11 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	// Now handle all the Base-URLs returned by the query to BigQuery:
 	for _, baseUrl := range baseUrlList {
 		handleBaseUrl(w, r, baseUrl)
-		fmt.Fprintf(w, "\n\n") // Separate the different buckets' ~12 "jp2" filepaths
+		//fmt.Fprintf(w, "\n\n") // Separate the different buckets' ~12 "jp2" filepaths
 	}
 	elapsed = time.Since(start)
 
-	fmt.Fprintf(w, "Time elapsed: %s", elapsed)
+	fmt.Fprintf(w, "Time elapsed handling base URLs: %s\n", elapsed)
 
 	//fmt.Fprintf(w, "\nReached the end of the handler!")
 }
