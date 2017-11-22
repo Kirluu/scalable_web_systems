@@ -12,6 +12,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
+	"time"
 )
 
 func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) (int64, error) {
@@ -79,8 +80,6 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 		latLng := s2.LatLngFromDegrees(floatPair[0], floatPair[1])
 		point := s2.PointFromLatLng(latLng)
 
-		fmt.Fprintf(w, "LatLng: %s, Point: %s\n", latLng, point)
-
 		points = append(points, point)
 	}
 
@@ -106,13 +105,14 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 
 func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]float64, time1 string, time2 string) (int64, error) {
 
+	ctx, _ = context.WithTimeout(ctx, 1*time.Minute)
 	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 		//fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
 		return -1, err
 	}
 
-	queryString := "SELECT COUNT(base_url) FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where"
+	queryString := "SELECT COUNT(*) AS theCount FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where"
 
 	first := true
 
@@ -149,23 +149,44 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		return -1, readErr
 	}
 
-	var count []bigquery.Value
-	errI := queryIterator.Next(&count)
-	fmt.Fprintf(w, "count slice contents: %s\n", count)
-	if errI != iterator.Done {
-		strInt := fmt.Sprintf("%s", count[0])
-		fmt.Fprintf(w, "strInt: %d\n", strInt)
-
-		if i, err := strconv.ParseInt(strInt, 64, 64); err == nil {
-
-			fmt.Fprintf(w, "Parsed integer from count result: %s\n", i)
-			return i, nil
+	for {
+		var c MyCount
+		err := queryIterator.Next(&c)
+		if err == iterator.Done {
+			return c.theCount, nil
 		}
-		return -1, nil
+		if err != nil {
+			fmt.Fprintf(w, "ERROR: %s", err)
+		}
+		fmt.Println(c)
+	}
 
+	for {
+		var count []bigquery.Value
+		errI := queryIterator.Next(&count)
+		fmt.Fprintf(w, "count slice contents: %s\n", count)
+
+		if errI == iterator.Done {
+			strInt := fmt.Sprintf("%s", count[0])
+
+			fmt.Fprintf(w, strInt + "\n")
+
+			i, err := strconv.ParseInt(strInt, 10, 64)
+			if err == nil {
+				fmt.Fprintf(w, "Parsed integer from count result: %s\n", i)
+				return i, nil
+			}
+			return -1, nil
+		}
+		if errI != nil {
+			return -1, err
+		}
 	}
-	if errI != nil {
-		return -1, err
-	}
+
+
 	return -1, nil
+}
+
+type MyCount struct {
+	theCount int64
 }
