@@ -88,7 +88,7 @@ func getAverageRGBValue(redFile io.Reader, greenFile io.Reader, blueFile io.Read
 }
 
 // Takes a file-reader and
-func getAverage_R_G_or_B_Value(file io.Reader) int {
+func getAverage_R_G_or_B_Value(file io.Reader) int { // A single file represents either R, G or B values as grayscale image
 	pixels, err := getPixels(file) // Assumption: This method works
 	if (err != nil) {
 		log.Fatal("%s", err)
