@@ -14,15 +14,19 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) (int, error) {
+func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) (int64, error) {
 	client := urlfetch.Client(ctx)
 
 	regions := [...]string{"europe", "north-america", "south-america", "asia", "central-america", "australia-ocenania", "africa", "antarctica"}
 
 	for _, region := range regions {
 		resp, err := client.Get(fmt.Sprintf("http://download.geofabrik.de/%s/%s.poly", region, country))
-		if (err != nil) {
-			return countImages(ctx, handlePolygon(w, parseGeofabrikResponse(resp)), timeArg1, timeArg2) // <-- TODO: Call JARL method instead of dummy
+		if (err == nil) {
+			bla := parseGeofabrikResponse(w, resp)
+
+			bla2 := handlePolygon(w, bla)
+
+			return countImages(ctx, w, bla2, timeArg1, timeArg2) // <-- TODO: Call JARL method instead of dummy
 		}
 	}
 
@@ -30,8 +34,8 @@ func searchCountry(w http.ResponseWriter, ctx context.Context, country string, t
 	return -1, nil
 }
 
-func parseGeofabrikResponse(resp *http.Response) [][2]float64 {
-	res := make([][2]float64, 80) // 80 because optimized for Denmark query ;)
+func parseGeofabrikResponse(w http.ResponseWriter, resp *http.Response) [][2]float64 {
+	res := make([][2]float64, 0) // 80 because optimized for Denmark query ;)
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	bodyString := string(body)
@@ -46,8 +50,8 @@ func parseGeofabrikResponse(resp *http.Response) [][2]float64 {
 
 		// Interpret the two first values in a line as a new lat/long combination
 		for _, elem := range lineElems {
-			parsed, err := strconv.ParseFloat(elem, 64)
-			if err != nil {
+			parsed, err := ParseFloat(w, elem)
+			if err == nil {
 				elemRes[elemResIndex] = parsed
 				elemResIndex++
 			}
@@ -66,12 +70,17 @@ func parseGeofabrikResponse(resp *http.Response) [][2]float64 {
 
 // Return format for each array of size 4 => lat1, lat2, long1, long2
 func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]float64 {
-	res := make([][4]float64, 80)
+	res := make([][4]float64, 0)
 
 	// Convert to s2.Point:
-	points := make([]s2.Point, 80)
+	points := make([]s2.Point, 0)
 	for _, floatPair := range geofabrikResult {
-		point := s2.PointFromLatLng(s2.LatLngFromDegrees(floatPair[0], floatPair[1]))
+
+		latLng := s2.LatLngFromDegrees(floatPair[0], floatPair[1])
+		point := s2.PointFromLatLng(latLng)
+
+		fmt.Fprintf(w, "LatLng: %s, Point: %s\n", latLng, point)
+
 		points = append(points, point)
 	}
 
@@ -85,17 +94,17 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 	for i := 0; i < len(cover); i++ {
 		c = s2.CellFromCellID(cover[i])
 		// Store result-set with the 4 values representing the two ranges for lat and long
-		res = append(res, [4]float64{c.RectBound().Lat.Lo, c.RectBound().Lat.Hi, c.RectBound().Lng.Lo, c.RectBound().Lng.Hi})
+		res = append(res, [4]float64{c.RectBound().Lo().Lat.Degrees(), c.RectBound().Hi().Lat.Degrees(), c.RectBound().Lo().Lng.Degrees(), c.RectBound().Hi().Lng.Degrees()})
 
 		totalArea += c.RectBound().Area()
 	}
-	fmt.Fprintf(w, "Amount of points retrieved from Geofabrik: %g", len(geofabrikResult))
-	fmt.Fprintf(w, "Total Area of rectangles representing the country: %v", totalArea)
+	fmt.Fprintf(w, "Amount of points retrieved from Geofabrik: %d\n", len(geofabrikResult))
+	fmt.Fprintf(w, "Total Area of rectangles representing the country: %v\n", totalArea)
 
 	return res
 }
 
-func countImages(ctx context.Context, rectangles [][4]float64, time1 string, time2 string) (int, error) {
+func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]float64, time1 string, time2 string) (int64, error) {
 
 	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
@@ -109,7 +118,7 @@ func countImages(ctx context.Context, rectangles [][4]float64, time1 string, tim
 
 	for _, rect := range rectangles {
 		if !first {
-			queryString += " or ("
+			queryString += " or ( "
 		} else {
 			queryString += " ( "
 			first = false
@@ -119,7 +128,7 @@ func countImages(ctx context.Context, rectangles [][4]float64, time1 string, tim
 		long1 := rect[2]
 		long2 := rect[3]
 
-		queryString += fmt.Sprintf("north_lat > %g and west_lon > %g and south_lat < %g and east_lon < %g )", lat1, long1, lat2, long2)
+		queryString += fmt.Sprintf("north_lat < %g and west_lon > %g and south_lat > %g and east_lon < %g )", lat2, long1, lat1, long2)
 
 	}
 
@@ -128,6 +137,8 @@ func countImages(ctx context.Context, rectangles [][4]float64, time1 string, tim
 	}
 
 	query := client.Query(queryString)
+
+	fmt.Fprintf(w, "QUERY\n\n%s\n\n", queryString)
 
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
@@ -140,8 +151,14 @@ func countImages(ctx context.Context, rectangles [][4]float64, time1 string, tim
 
 	var count []bigquery.Value
 	errI := queryIterator.Next(&count)
-	if errI == iterator.Done {
-		if i, err := strconv.Atoi(fmt.Sprintf("%s", count)); err == nil {
+	fmt.Fprintf(w, "count slice contents: %s\n", count)
+	if errI != iterator.Done {
+		strInt := fmt.Sprintf("%s", count[0])
+		fmt.Fprintf(w, "strInt: %d\n", strInt)
+
+		if i, err := strconv.ParseInt(strInt, 64, 64); err == nil {
+
+			fmt.Fprintf(w, "Parsed integer from count result: %s\n", i)
 			return i, nil
 		}
 		return -1, nil
