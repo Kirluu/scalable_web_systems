@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/golang/geo/s2"
-	"net/http"
-	"google.golang.org/appengine/urlfetch"
-	"strings"
 	"io/ioutil"
+	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/golang/geo/s2"
+	"google.golang.org/appengine/urlfetch"
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
@@ -21,7 +22,7 @@ func searchCountry(w http.ResponseWriter, ctx context.Context, country string, t
 
 	for _, region := range regions {
 		resp, err := client.Get(fmt.Sprintf("http://download.geofabrik.de/%s/%s.poly", region, country))
-		if (err == nil) {
+		if err == nil {
 			bla := parseGeofabrikResponse(w, resp)
 
 			bla2 := handlePolygon(w, bla)
@@ -56,7 +57,9 @@ func parseGeofabrikResponse(w http.ResponseWriter, resp *http.Response) [][2]flo
 				elemResIndex++
 			}
 			// Stop once we have inserted two elements - if there are more, ignore them
-			if elemResIndex == 2 { break }
+			if elemResIndex == 2 {
+				break
+			}
 		}
 
 		// Check that we successfully parsed two floats on the line: Only add as result if so
@@ -129,7 +132,8 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		long2 := rect[3]
 
 		queryString += fmt.Sprintf("north_lat < %g and west_lon > %g and south_lat > %g and east_lon < %g )", lat2, long1, lat1, long2)
-
+		queryString += fmt.Sprintf("or ( ( north_lat > %g and south_lat < %g) or (west_lon < %g and east_lon > %g))", lat2, lat2, long1, long1)
+		queryString += fmt.Sprintf("or ( ( north_lat > %g and south_lat < %g) or (west_lon < %g and east_lon > %g))", lat1, lat1, long2, long2)
 	}
 
 	if time1 != "" && time2 != "" {
