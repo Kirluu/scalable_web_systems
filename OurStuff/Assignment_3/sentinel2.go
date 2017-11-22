@@ -54,7 +54,15 @@ func getCountryImageCount(w http.ResponseWriter, r *http.Request) {
 	timeArgument1 := r.URL.Query().Get("fromTime")
 	timeArgument2 := r.URL.Query().Get("toTime")
 
-	granuleCount := searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
+	granuleCount, err := searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
+	if (err != nil) {
+		fmt.Fprintf(w, "ERROR: %s", err)
+		return
+	}
+	if (granuleCount == -1) {
+		fmt.Fprintf(w, "Country not found!")
+		return
+	}
 
 	fmt.Fprintf(w, "Found %g images %s", granuleCount, getTimeString(timeArgument1, timeArgument2))
 }

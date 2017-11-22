@@ -22,16 +22,12 @@ func searchCountry(w http.ResponseWriter, ctx context.Context, country string, t
 	for _, region := range regions {
 		resp, err := client.Get(fmt.Sprintf("http://download.geofabrik.de/%s/%s.poly", region, country))
 		if (err != nil) {
-			return dummy(ctx, handlePolygon(w, parseGeofabrikResponse(resp)), timeArg1, timeArg2) // <-- TODO: Call JARL method instead of dummy
+			return countImages(ctx, handlePolygon(w, parseGeofabrikResponse(resp)), timeArg1, timeArg2) // <-- TODO: Call JARL method instead of dummy
 		}
 	}
 
 	// Return bad result (-1) (Could've used error, but no need, since only the http-gets can fail, and these just mean the country couldn't be found)
 	return -1, nil
-}
-
-func dummy(ctx context.Context, param [][4]float64, timeArg1 string, timeArg2 string) (int, error){
-	return 1, nil
 }
 
 func parseGeofabrikResponse(resp *http.Response) [][2]float64 {
