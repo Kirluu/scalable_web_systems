@@ -23,7 +23,7 @@ import (
 func init() {
 	http.HandleFunc("/", handler) // Overall default handler
 	http.HandleFunc("/bigquery", getBigquery)
-
+	http.HandleFunc("/countries", getCountryImageCount)
 }
 
 func main() {
@@ -45,6 +45,26 @@ func errh(w http.ResponseWriter, err error, msg string) bool {
 		return true
 	}
 	return false
+}
+
+func getCountryImageCount(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	countrySearched := r.URL.Query().Get("country")
+	timeArgument1 := r.URL.Query().Get("fromTime")
+	timeArgument2 := r.URL.Query().Get("toTime")
+
+	granuleCount := searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
+
+	fmt.Fprintf(w, "Found %g images %s", granuleCount, getTimeString(timeArgument1, timeArgument2))
+}
+
+func getTimeString(time1 string, time2 string) string {
+	if time1 == "" {
+		return "throughout all time"
+	} else {
+		return fmt.Sprintf("from %s to %s", time1, time2)
+	}
 }
 
 func getBigquery(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +139,7 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	}
 	elapsed = time.Since(start)
 
-	//fmt.Fprintf(w, "Time elapsed handling base URLs: %s\n", elapsed)
+	fmt.Fprintf(w, "Time elapsed handling base URLs: %s\n", elapsed)
 
 	//fmt.Fprintf(w, "\nReached the end of the handler!")
 }
