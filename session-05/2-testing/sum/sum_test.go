@@ -15,7 +15,10 @@
 package sum_test
 
 import "testing"
+import "./sum"
 
 func TestAll(t *testing.T) {
 	// Implement the body of this test, calling sum.All.
+	TheSum := sum.All([2]int{1, 2, 3, 4, 5})
+
 }

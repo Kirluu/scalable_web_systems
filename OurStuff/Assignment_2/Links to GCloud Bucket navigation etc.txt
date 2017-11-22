@@ -1,0 +1,82 @@
+Create "Service account" + anvendelse i Go af denne, til oprettelse af en Go client som har auth-level = den service-account, man har oprettet:
+https://cloud.google.com/docs/authentication/getting-started
+
+
+"Object" JSON format from GCloud buckets:
+https://cloud.google.com/storage/docs/json_api/v1/objects#resource
+
+
+Fetching list of objects using HTTP (in-browser request-creator):
+https://cloud.google.com/storage/docs/json_api/v1/objects/list
+- Bucket = bucket-name only, e.g. "gcp-public-data-sentinel-2"
+- Delimiter = "/"
+- prefix = den path, hvorfra du gerne vil se alle contents INKL. trailing "/"
+	- FX: "tiles/21/H/UU/S2A_MSIL1C_20170521T134211_N0205_R124_T21HUU_20170521T134911.SAFE/GRANULE/"
+::: Directories lægges i JSON listen "prefixes", objekter i "items"
+
+
+Eksempel på access af data direkte i bucket sub-directory:
+https://console.cloud.google.com/storage/browser/gcp-public-data-sentinel-2/tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE
+
+
+BigQuery web-browser interface:
+https://bigquery.cloud.google.com/table/bigquery-public-data:cloud_storage_geo_index.sentinel_2_index?pli=1
+
+
+BigQuery Client Library usage example frontpage:
+https://cloud.google.com/bigquery/docs/reference/libraries
+
+
+"Automatic" GCloud Client Library Authentication setup:
+https://cloud.google.com/docs/authentication/getting-started
+
+browser working without oath:
+https://www.googleapis.com/storage/v1/b/gcp-public-data-sentinel-2/o?delimiter=/&prefix=tiles/39/P/YT/S2A_MSIL1C_20170921T064621_N0205_R020_T39PYT_20170921T065933.SAFE/GRANULE/
+
+
+_____________________________________________________________
+From UTC to MGRS (also knowing lat/long)
+Source-link:
+http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
+
+Specific method with conversion: (uses their MGRS-object-thingy, but maybe we can infer the required meanings)
+/**
+ * Converts UTM coordinate to MGRS reference.
+ *
+ * @returns {Mgrs}
+ * @throws  {Error} Invalid UTM coordinate.
+ *
+ * @example
+ *   var utmCoord = new Utm(31, 'N', 448251, 5411932);
+ *   var mgrsRef = utmCoord.toMgrs(); // 31U DQ 48251 11932
+ */
+Utm.prototype.toMgrs = function() {
+    if (isNaN(this.zone + this.easting + this.northing)) throw new Error('Invalid UTM coordinate ‘'+this.toString()+'’');
+
+    // MGRS zone is same as UTM zone
+    var zone = this.zone;
+
+    // convert UTM to lat/long to get latitude to determine band
+    var latlong = this.toLatLonE();
+    // grid zones are 8° tall, 0°N is 10th band
+    var band = Mgrs.latBands.charAt(Math.floor(latlong.lat/8+10)); // latitude band
+
+    // columns in zone 1 are A-H, zone 2 J-R, zone 3 S-Z, then repeating every 3rd zone
+    var col = Math.floor(this.easting / 100e3);
+    var e100k = Mgrs.e100kLetters[(zone-1)%3].charAt(col-1); // col-1 since 1*100e3 -> A (index 0), 2*100e3 -> B (index 1), etc.
+
+    // rows in even zones are A-V, in odd zones are F-E
+    var row = Math.floor(this.northing / 100e3) % 20;
+    var n100k = Mgrs.n100kLetters[(zone-1)%2].charAt(row);
+
+    // truncate easting/northing to within 100km grid square
+    var easting = this.easting % 100e3;
+    var northing = this.northing % 100e3;
+
+    // round to nm precision
+    easting = Number(easting.toFixed(6));
+    northing = Number(northing.toFixed(6));
+
+    return new Mgrs(zone, band, e100k, n100k, easting, northing);
+};
+_____________________________________________________________
