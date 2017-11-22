@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/geo/s2"
 	"google.golang.org/appengine/urlfetch"
@@ -109,6 +110,7 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 
 func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]float64, time1 string, time2 string) (int64, error) {
 
+	ctx, _ = context.WithTimeout(ctx, 1*time.Minute)
 	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
 		//fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
@@ -131,9 +133,8 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		long1 := rect[2]
 		long2 := rect[3]
 
-		queryString += fmt.Sprintf("north_lat < %g and west_lon > %g and south_lat > %g and east_lon < %g )", lat2, long1, lat1, long2)
-		queryString += fmt.Sprintf("or ( ( north_lat > %g and south_lat < %g) or (west_lon < %g and east_lon > %g))", lat2, lat2, long1, long1)
-		queryString += fmt.Sprintf("or ( ( north_lat > %g and south_lat < %g) or (west_lon < %g and east_lon > %g))", lat1, lat1, long2, long2)
+		queryString += fmt.Sprintf(" north_lat < %g and west_lon > %g and south_lat > %g and east_lon < %g )", lat2, long1, lat1, long2)
+		queryString += fmt.Sprintf(" or ((north_lat > %g and south_lat < %g) and (west_lon < %g and east_lon > %g))", lat2, lat2, long1, long1)
 	}
 
 	if time1 != "" && time2 != "" {
