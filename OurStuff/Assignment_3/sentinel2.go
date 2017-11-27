@@ -14,10 +14,11 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
+	"time"
+
 	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
-	"time"
 )
 
 func init() {
@@ -48,23 +49,19 @@ func errh(w http.ResponseWriter, err error, msg string) bool {
 }
 
 func getCountryImageCount(w http.ResponseWriter, r *http.Request) {
+	var start = time.Now()
 	ctx := appengine.NewContext(r)
 
 	countrySearched := r.URL.Query().Get("country")
 	timeArgument1 := r.URL.Query().Get("fromTime")
 	timeArgument2 := r.URL.Query().Get("toTime")
 
-	granuleCount, err := searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
-	if (err != nil) {
-		fmt.Fprintf(w, "ERROR: %s", err)
-		return
-	}
-	if (granuleCount == -1) {
-		fmt.Fprintf(w, "Country not found!")
-		return
-	}
+	searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
 
-	fmt.Fprintf(w, "Found %g images %s", granuleCount, getTimeString(timeArgument1, timeArgument2))
+	fmt.Fprintf(w, "%s", getTimeString(timeArgument1, timeArgument2))
+	elapsed := time.Since(start)
+
+	fmt.Fprintf(w, "\nTime elapsed handling base URLs: %s\n", elapsed)
 }
 
 func getTimeString(time1 string, time2 string) string {
@@ -86,36 +83,46 @@ func getBigquery(w http.ResponseWriter, r *http.Request) {
 	// Perform comma-split:
 	latArray := strings.Split(latStr, ",")
 	lat, err := strconv.ParseFloat(latArray[0], 64)
-	if errh(w, err, "Failed to parse latitude!") { return }
+	if errh(w, err, "Failed to parse latitude!") {
+		return
+	}
 
 	var lat2 float64 = -1
-	if (len(latArray) > 1) { // At least one comma - try to fetch second value as well
+	if len(latArray) > 1 { // At least one comma - try to fetch second value as well
 		isLatRange = true
 		lat2, err = strconv.ParseFloat(latArray[1], 64)
-		if errh(w, err, "Failed to parse second latitude parameter!") { return }
+		if errh(w, err, "Failed to parse second latitude parameter!") {
+			return
+		}
 	}
 
 	longStr := r.URL.Query().Get("long")
-	if errh(w, err, "Missing query input: longitude (long)") { return }
+	if errh(w, err, "Missing query input: longitude (long)") {
+		return
+	}
 
 	longArray := strings.Split(longStr, ",")
 	// Sanity check: If first was a range, second should be as well:
-	if ((isLatRange && len(longArray) < 2) || (!isLatRange && len(longArray) > 1)) {
+	if (isLatRange && len(longArray) < 2) || (!isLatRange && len(longArray) > 1) {
 		fmt.Fprintf(w, "If either lat or long is given as a range, the other should be a range as well.")
 		return
 	}
 	long, err := strconv.ParseFloat(longArray[0], 64)
-	if errh(w, err, "Failed to parse longitude!") { return }
+	if errh(w, err, "Failed to parse longitude!") {
+		return
+	}
 
 	var long2 float64 = -1
-	if (len(longArray) > 1) { // At least one comma - try to fetch second value as well
+	if len(longArray) > 1 { // At least one comma - try to fetch second value as well
 		long2, err = strconv.ParseFloat(longArray[1], 64)
-		if errh(w, err, "Failed to parse second longitude parameter!") { return }
+		if errh(w, err, "Failed to parse second longitude parameter!") {
+			return
+		}
 	}
 
 	// Sanity-check #2: Correct values in relation to one another
-	if (isLatRange) {
-		if (lat > lat2 || long > long2) {
+	if isLatRange {
+		if lat > lat2 || long > long2 {
 			fmt.Fprintf(w, "When giving ranges, the prior value should be smaller than or equal to the second value, for both lat and long.")
 			return
 		}
@@ -170,7 +177,7 @@ func getBaseUrls(lat float64, lat2 float64, long float64, long2 float64, w http.
 	latMore := lat + 0.5
 	longLess := long - 0.5
 	longMore := long + 0.5
-	if (isRange) {
+	if isRange {
 		latLess = lat
 		latMore = lat2
 		longLess = long
@@ -214,7 +221,7 @@ func printBaseUrls(w io.Writer, iter *bigquery.RowIterator, firstOnly bool) ([]s
 			return nil, err
 		}
 		resList = append(resList, fmt.Sprintf("%s", baseUrl[0])) // TODO: Maybe for range, we need to access all here?
-		if (firstOnly) {
+		if firstOnly {
 			return resList, nil
 		}
 		//fmt.Fprintf(w, "\n%s", baseUrl[0])
