@@ -14,7 +14,6 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
-	"time"
 )
 
 func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) (int64, error) {
@@ -133,7 +132,7 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		long2 := rect[3]
 
 		queryString += fmt.Sprintf(" north_lat < %g and west_lon > %g and south_lat > %g and east_lon < %g )", lat2, long1, lat1, long2)
-		queryString += fmt.Sprintf(" or ((north_lat > %g and south_lat < %g) and (west_lon < %g and east_lon > %g))", lat2, lat2, long1, long1)
+		queryString += fmt.Sprintf(" or ((north_lat > %g and south_lat < %g) and (west_lon < %g and east_lon > %g) )", lat2, lat2, long1, long1)
 	}
 
 	if time1 != "" && time2 != "" {
@@ -142,7 +141,7 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 
 	query := client.Query(queryString)
 
-	fmt.Fprintf(w, "QUERY\n\n%s\n\n", queryString)
+	//fmt.Fprintf(w, "\n%s\n\n", queryString)
 
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
@@ -153,18 +152,20 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		return -1, readErr
 	}
 
-	for {
-		var c MyCount
-		err := queryIterator.Next(&c)
-		if err == iterator.Done {
-			return c.theCount, nil
+	/*if false { // Not working...
+		for {
+			var c MyCount
+			err := queryIterator.Next(&c)
+			if err == iterator.Done {
+				return c.theCount, nil
+			}
+			if err != nil {
+				fmt.Fprintf(w, "ERROR: %s", err)
+			}
+			fmt.Println(c)
 		}
-		if err != nil {
-			fmt.Fprintf(w, "ERROR: %s", err)
-		}
-		fmt.Println(c)
-	}
-
+	}*/
+	rnd := 1
 	for {
 		var count []bigquery.Value
 		errI := queryIterator.Next(&count)
@@ -185,6 +186,9 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		if errI != nil {
 			return -1, err
 		}
+		rnd++
+
+		if (rnd == 10) { return -1, nil }
 	}
 
 
