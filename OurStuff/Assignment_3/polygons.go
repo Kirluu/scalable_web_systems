@@ -15,7 +15,7 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) (int64, error) {
+func searchCountry(w http.ResponseWriter, ctx context.Context, country string, timeArg1 string, timeArg2 string) {
 	client := urlfetch.Client(ctx)
 
 	regions := [...]string{"europe", "north-america", "south-america", "asia", "central-america", "australia-ocenania", "africa", "antarctica"}
@@ -27,12 +27,11 @@ func searchCountry(w http.ResponseWriter, ctx context.Context, country string, t
 
 			bla2 := handlePolygon(w, bla)
 
-			return countImages(ctx, w, bla2, timeArg1, timeArg2) // <-- TODO: Call JARL method instead of dummy
+			countImages(ctx, w, bla2, timeArg1, timeArg2)
+			return
 		}
 	}
 
-	// Return bad result (-1) (Could've used error, but no need, since only the http-gets can fail, and these just mean the country couldn't be found)
-	return -1, nil
 }
 
 func parseGeofabrikResponse(w http.ResponseWriter, resp *http.Response) [][2]float64 {
@@ -105,13 +104,13 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 	return res
 }
 
-func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]float64, time1 string, time2 string) (int64, error) {
+func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]float64, time1 string, time2 string) {
 
 	ctx, _ = context.WithTimeout(ctx, 1*time.Minute)
 	client, err := bigquery.NewClient(ctx, "johaa-178408")
 	if err != nil {
-		//fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
-		return -1, err
+		fmt.Fprintf(w, "error when creating BigQuery client from appengine context!")
+		return
 	}
 
 	queryString := "SELECT COUNT(distinct base_url) as COUNT FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where"
@@ -148,46 +147,29 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 
 	var queryIterator, readErr = query.Read(ctx)
 	if readErr != nil {
-		return -1, readErr
+		fmt.Fprintf(w, "Error reading bigquery")
+		return
 	}
-
-	var res = int64(1)
 
 	for {
 		var baseUrl []bigquery.Value
 		err := queryIterator.Next(&baseUrl)
 		if err == iterator.Done {
-			return res, nil
+			fmt.Fprintf(w, "Didn't find a count")
+			return
 		}
 		if err != nil {
-			return res, err
+			fmt.Fprintf(w, "Error reading bigquery")
+			return
 		}
 		sumstr := fmt.Sprintf("%s", baseUrl[0])
 		if strings.Contains(sumstr, "int64") {
 			count := strings.Split(sumstr, "=")[1]
-			fmt.Fprintf(w, strings.Trim(count, ")"))
+			fcount := strings.Trim(count, ")")
+			fmt.Fprintf(w, "Found %s images", fcount)
+			return
 		}
 	}
-
-	// var count []bigquery.Value
-	// errI := queryIterator.Next(&count)
-	// fmt.Fprintf(w, "count slice contents: %s\n", count[0])
-	// if errI != iterator.Done {
-	// 	strInt := fmt.Sprintf("%s", count[0])
-	// 	fmt.Fprintf(w, "strInt: %s\n", strInt)
-
-	// if i, err := strconv.ParseInt(strInt, 0, 10); err == nil {
-
-	// 	fmt.Fprintf(w, "Parsed integer from count result: %d\n", i)
-	// 	return i, nil
-	// }
-	return -1, nil
-
-	// }
-	// if errI != nil {
-	// 	return -1, err
-	// }
-	// return -1, nil
 }
 
 type MyCount struct {
