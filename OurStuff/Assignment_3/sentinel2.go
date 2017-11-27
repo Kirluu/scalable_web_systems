@@ -49,6 +49,7 @@ func errh(w http.ResponseWriter, err error, msg string) bool {
 }
 
 func getCountryImageCount(w http.ResponseWriter, r *http.Request) {
+	var start = time.Now()
 	ctx := appengine.NewContext(r)
 
 	countrySearched := r.URL.Query().Get("country")
@@ -58,6 +59,9 @@ func getCountryImageCount(w http.ResponseWriter, r *http.Request) {
 	searchCountry(w, ctx, countrySearched, timeArgument1, timeArgument2)
 
 	fmt.Fprintf(w, "%s", getTimeString(timeArgument1, timeArgument2))
+	elapsed := time.Since(start)
+
+	fmt.Fprintf(w, "\nTime elapsed handling base URLs: %s\n", elapsed)
 }
 
 func getTimeString(time1 string, time2 string) string {
