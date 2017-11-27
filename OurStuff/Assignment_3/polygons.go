@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -117,7 +116,7 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		return -1, err
 	}
 
-	queryString := "SELECT COUNT(base_url) FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where"
+	queryString := "SELECT COUNT(distinct base_url) as COUNT FROM `bigquery-public-data.cloud_storage_geo_index.sentinel_2_index` where"
 
 	first := true
 
@@ -143,7 +142,7 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 
 	query := client.Query(queryString)
 
-	fmt.Fprintf(w, "QUERY\n\n%s\n\n", queryString)
+	//fmt.Fprintf(w, "QUERY\n\n%s\n\n", queryString)
 
 	// Use standard SQL syntax for queries.
 	// See: https://cloud.google.com/bigquery/sql-reference/
@@ -154,23 +153,41 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 		return -1, readErr
 	}
 
-	var count []bigquery.Value
-	errI := queryIterator.Next(&count)
-	fmt.Fprintf(w, "count slice contents: %s\n", count)
-	if errI != iterator.Done {
-		strInt := fmt.Sprintf("%s", count[0])
-		fmt.Fprintf(w, "strInt: %d\n", strInt)
+	var res = int64(1)
 
-		if i, err := strconv.ParseInt(strInt, 64, 64); err == nil {
-
-			fmt.Fprintf(w, "Parsed integer from count result: %s\n", i)
-			return i, nil
+	for {
+		var baseUrl []bigquery.Value
+		err := queryIterator.Next(&baseUrl)
+		if err == iterator.Done {
+			return res, nil
 		}
-		return -1, nil
+		if err != nil {
+			return res, err
+		}
+		sumstr := fmt.Sprintf("%s", baseUrl[0])
+		if strings.Contains(sumstr, "int64") {
+			count := strings.Split(sumstr, "=")[1]
+			fmt.Fprintf(w, strings.Trim(count, ")"))
+		}
+	}
 
-	}
-	if errI != nil {
-		return -1, err
-	}
+	// var count []bigquery.Value
+	// errI := queryIterator.Next(&count)
+	// fmt.Fprintf(w, "count slice contents: %s\n", count[0])
+	// if errI != iterator.Done {
+	// 	strInt := fmt.Sprintf("%s", count[0])
+	// 	fmt.Fprintf(w, "strInt: %s\n", strInt)
+
+	// if i, err := strconv.ParseInt(strInt, 0, 10); err == nil {
+
+	// 	fmt.Fprintf(w, "Parsed integer from count result: %d\n", i)
+	// 	return i, nil
+	// }
 	return -1, nil
+
+	// }
+	// if errI != nil {
+	// 	return -1, err
+	// }
+	// return -1, nil
 }
