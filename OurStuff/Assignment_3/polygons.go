@@ -82,8 +82,6 @@ func handlePolygon(w http.ResponseWriter, geofabrikResult [][2]float64) [][4]flo
 		latLng := s2.LatLngFromDegrees(floatPair[0], floatPair[1])
 		point := s2.PointFromLatLng(latLng)
 
-		fmt.Fprintf(w, "LatLng: %s, Point: %s\n", latLng, point)
-
 		points = append(points, point)
 	}
 
@@ -190,4 +188,8 @@ func countImages(ctx context.Context, w http.ResponseWriter, rectangles [][4]flo
 	// 	return -1, err
 	// }
 	// return -1, nil
+}
+
+type MyCount struct {
+	theCount int64
 }
